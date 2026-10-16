@@ -241,6 +241,58 @@
     <!-- =================================================================== -->
     <!-- MINIMALIST TOP HUD BAR                                              -->
     <!-- =================================================================== -->
+    <!-- =================================================================== -->
+    <!-- HADES-STYLE IN-RUN TACTICAL PERK SELECTOR (NON-BLOCKING OVERLAY)    -->
+    <!-- =================================================================== -->
+    <div id="perkSelectOverlay" class="hidden absolute top-12 sm:top-14 inset-x-0 mx-auto max-w-xl z-35 p-2 pointer-events-auto transition-all animate-fade-in">
+      <div class="hud-pill p-3 sm:p-4 rounded-2xl bg-slate-950/95 border border-cyan-400/50 shadow-[0_0_35px_rgba(56,189,248,0.35)] backdrop-blur-md flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-xs sm:text-sm font-black text-amber-300">⚡ ВЫБОР ТАКТИЧЕСКОГО МОДУЛЯ</span>
+            <span class="text-[10px] text-slate-400 font-mono font-bold">• 1 из 3 на забег</span>
+          </div>
+          <button id="btnDismissPerks" type="button" class="text-slate-400 hover:text-white text-xs px-2 py-0.5 rounded-lg bg-slate-800">
+            ✕
+          </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <!-- Card 1 -->
+          <button id="btnPerkCard1" type="button" class="flex flex-col items-start p-2 sm:p-2.5 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-cyan-400 hover:bg-slate-800 active:scale-95 transition text-left group">
+            <div class="flex items-center justify-between w-full mb-1">
+              <span class="text-xs sm:text-sm font-black text-cyan-300 group-hover:text-cyan-200">🧮 Округлитель</span>
+              <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-400 font-black border border-cyan-500/30">[X / 1]</span>
+            </div>
+            <span class="text-[9px] sm:text-[10px] text-slate-300 font-medium leading-tight">
+              Погрешность <b class="text-cyan-300">±1</b> от цели засчитывается как Резонанс (2.0x урон)!
+            </span>
+          </button>
+
+          <!-- Card 2 -->
+          <button id="btnPerkCard2" type="button" class="flex flex-col items-start p-2 sm:p-2.5 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-amber-400 hover:bg-slate-800 active:scale-95 transition text-left group">
+            <div class="flex items-center justify-between w-full mb-1">
+              <span class="text-xs sm:text-sm font-black text-amber-300 group-hover:text-amber-200">🪝 Гарпун</span>
+              <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-950 text-amber-400 font-black border border-amber-500/30">[A / 2]</span>
+            </div>
+            <span class="text-[9px] sm:text-[10px] text-slate-300 font-medium leading-tight">
+              Зонд даёт <b class="text-amber-300">+4</b> вместо +3. Радиус захвата ядра <b class="text-amber-300">+35%</b>!
+            </span>
+          </button>
+
+          <!-- Card 3 -->
+          <button id="btnPerkCard3" type="button" class="flex flex-col items-start p-2 sm:p-2.5 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-rose-400 hover:bg-slate-800 active:scale-95 transition text-left group">
+            <div class="flex items-center justify-between w-full mb-1">
+              <span class="text-xs sm:text-sm font-black text-rose-300 group-hover:text-rose-200">⚡ Турбо-Мод</span>
+              <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-rose-950 text-rose-400 font-black border border-rose-500/30">[B / 3]</span>
+            </div>
+            <span class="text-[9px] sm:text-[10px] text-slate-300 font-medium leading-tight">
+              <b class="text-rose-300">⚡ ТУРБО</b> рядом со смерчем сбрасывает <b class="text-rose-300">-1</b> при переборе или даёт <b class="text-emerald-300">+1</b> до цели!
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="absolute top-0 inset-x-0 p-2 sm:p-3.5 flex flex-col gap-1.5 z-20 pointer-events-none max-w-6xl mx-auto">
       <div class="flex items-center justify-between gap-1.5 pointer-events-auto flex-wrap">
         <!-- Left: Mode Switch + Level Navigator (1..100) + Camera View -->
@@ -340,6 +392,16 @@
       <!-- Second Slim Row -->
       <div id="gameHudTop" class="flex items-center justify-between px-1 pointer-events-auto flex-wrap gap-1">
         <div class="flex items-center gap-1.5 flex-wrap">
+          <!-- Kishotenketsu 4-Phase Pacing Badge -->
+          <div id="hudKishotenketsuBadge" class="hud-pill px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black border border-emerald-400/50 text-emerald-200 bg-emerald-950/80 shadow-[0_0_10px_rgba(52,211,153,0.3)] flex items-center gap-1.5 transition-all">
+            <span id="lblKishotenketsuPhase">🎓 ФАЗА KI: Знакомство</span>
+          </div>
+
+          <!-- Active In-Run Tactical Perk Pill -->
+          <div id="hudActivePerkPill" class="hidden hud-pill px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black border border-amber-400/50 text-amber-200 bg-amber-950/80 shadow-[0_0_10px_rgba(245,158,11,0.3)] flex items-center gap-1.5 transition-all">
+            <span id="lblActivePerkName">⚡ Модуль: Округлитель (±1)</span>
+          </div>
+
           <!-- Mathematical Resonance & Logic Polarity Target Pill -->
           <div id="hudMathTargetPill" class="hidden hud-pill px-3 py-0.5 rounded-full flex items-center gap-2 text-[11px] font-black border border-cyan-400/40 shadow-[0_0_12px_rgba(34,211,238,0.25)] bg-slate-950/85">
             <span id="lblMathTargetFormula" class="text-cyan-300 font-mono">🧮 КОД: 0 / 7</span>
@@ -1695,52 +1757,79 @@ function generateLevelConfig(lvl) {
   let tornadoCount, volcanoCount, bumperCount, boulderCount, towerCount;
 
   if (lvl === 1) {
-    // Level 1: Pure Minimalist Chase & Inertia
+    // Level 1: Pure Minimalist Chase & Inertia (KI Phase: Immediate Success via 1 Trap!)
     name = "Уровень 1: Чистое Поле и Вектор Погони";
-    desc = "Минималистичная погоня: 1 торнадо с инерцией. Срезай 90° и ставь зонд в след заноса!";
+    desc = "ФАЗА KI: 1 торнадо. Резонанс [ 3 ]! Оставь 1 мину-зонд [💣] прямо в след заноса смерча — мгновенный резонанс!";
     tornadoCount = 1;
     volcanoCount = 0;
     bumperCount = 0;
     boulderCount = 0;
     towerCount = 0;
   } else if (lvl === 2) {
-    // Level 2: Exact Sum Arithmetic (+3 and +2)
-    name = "Уровень 2: Математический Резонанс [ 5 ] и [ 7 ]";
-    desc = "Чистая степь. Резонансные ядра: 💣 Зонд (+3), 🎯 Залп (+2). Сложи точный код!";
+    // Level 2: Exact Sum Arithmetic (+3 and +2) (KI Phase)
+    name = "Уровень 2: Математический Резонанс [ 5 ]";
+    desc = "ФАЗА KI: Чистая степь. Резонанс [ 5 ]: 💣 Зонд (+3) + 🎯 Залп (+2) = 5!";
     tornadoCount = 2;
     volcanoCount = 0;
     bumperCount = 0;
     boulderCount = 0;
     towerCount = 0;
   } else if (lvl === 3) {
-    // Level 3: Operator Doubling (×2)
+    // Level 3: Operator Doubling (×2) (SHO Phase)
     name = "Уровень 3: Оператор Удвоения (×2)";
-    desc = "Чётные коды [ 6, 8, 10 ]. Выстрел в свой зонд удваивает частоту!";
+    desc = "ФАЗА SHO: Чётные коды [ 6, 8 ]. Выстрел [🎯] в свой зонд удваивает частоту (×2)!";
     tornadoCount = 2;
     volcanoCount = 0;
     bumperCount = 0;
     boulderCount = 0;
     towerCount = 0;
-  } else if (lvl <= 5) {
-    // Levels 4-5: Alternating Polarity Logic (Bipolar Shield)
-    name = `Уровень ${lvl}: Логика Чередования (Биполярный Щит)`;
-    desc = "Щит требует чередовать атаки: 💣 Ловушка ⇄ 🎯 Залп. Повтор блокирует урон!";
+  } else if (lvl === 4) {
+    // Level 4: 2-Probe Bola (+5) and Alternating Polarity (SHO Phase)
+    name = "Уровень 4: Грави-Аркан (+5) и Биполярный Щит";
+    desc = "ФАЗА SHO: 🪝 Связка 2-х зондов даёт +5! Чередуй оружие: 💣 ⇄ 🎯 (+25% урона)!";
     tornadoCount = 2;
     volcanoCount = 0;
     bumperCount = 2;
     boulderCount = 0;
     towerCount = 0;
+  } else if (lvl === 5) {
+    // Level 5: Ten Twist 1 - Turbo Negative Correction (-1)
+    name = "Уровень 5: Отрицательный Сброс (-1 Гц)";
+    desc = "ФАЗА TEN (ПОВОРОТ): При переборе на +1 жми ⚡ ТУРБО — акустический сброс -1 спасёт резонанс!";
+    tornadoCount = 2;
+    volcanoCount = 0;
+    bumperCount = 2;
+    boulderCount = 0;
+    towerCount = 0;
+  } else if (lvl === 6) {
+    // Level 6: Ten Twist 2 - Synchronous Twin Tornadoes
+    name = "Уровень 6: Синхронные Близнецы";
+    desc = "ФАЗА TEN: Два смерча связаны резонансом! Взлом кода одного отнимет 50% HP у близнеца!";
+    tornadoCount = 2;
+    volcanoCount = 1;
+    bumperCount = 2;
+    boulderCount = 0;
+    towerCount = 2;
+  } else if (lvl === 7) {
+    // Level 7: Ten Twist 3 - Geometric Ricochet
+    name = "Уровень 7: Геометрия Рикошета";
+    desc = "ФАЗА TEN: Кристальные валуны! Рикошет [🎯] пробивает щит, наносит x2.5 урона и даёт +4!";
+    tornadoCount = 2;
+    volcanoCount = 1;
+    bumperCount = 3;
+    boulderCount = 3;
+    towerCount = 2;
   } else if (lvl <= 9) {
-    // Levels 6-9: Geometric Ricochet and Triangulation (boulders appear!)
-    name = `Уровень ${lvl}: Геометрия Рикошета и Триангуляция`;
-    desc = "Кристальные валуны отражают залп: рикошет пробивает щит и дает +4 к резонансу!";
+    // Levels 8-9: Ketsu Mastery Synthesis
+    name = `Уровень ${lvl}: Синтез Мастерства`;
+    desc = "ФАЗА KETSU: Полный арсенал механик (+3, +2, ×2, -1, аркан и рикошет) перед Битвой с Боссом!";
     tornadoCount = 2;
     volcanoCount = 1;
     bumperCount = 3;
     boulderCount = 3;
     towerCount = 2;
   } else {
-    // Levels 10+: Full dynamic scaling up to Level 100
+    // Levels 10+: Full dynamic scaling up to Level 100 Boss Exam
     tornadoCount = isLevel100 ? 4 : (isBoss ? 1 : Math.min(6, 1 + Math.floor(lvl / 18)));
     volcanoCount = Math.min(5, Math.floor(lvl / 20));
     bumperCount = 4 + (lvl % 4);
@@ -3622,23 +3711,40 @@ function draw3DProjectile(pr) {
         if (currentConfig.level === 1) kind = 'normal';
         else if (currentConfig.level === 2) kind = (i === 0) ? 'normal' : 'dasher';
 
-        // Mathematical Core Resonance Target & Polarity Configuration
+        // Mathematical Core Resonance Target & Polarity Configuration (Kishotenketsu curve)
         let mathTgt = undefined;
         let reqPolarity = null;
-        if (currentConfig.level === 2) {
-          mathTgt = (i === 0) ? 5 : 7;
+        if (currentConfig.level === 1) {
+          mathTgt = 3; // Ki: Single trap (+3) triggers exact resonance on first try!
+        } else if (currentConfig.level === 2) {
+          mathTgt = 5; // Ki: 3 + 2 = 5
         } else if (currentConfig.level === 3) {
-          mathTgt = (i === 0) ? 6 : 8;
+          mathTgt = (i === 0) ? 6 : 8; // Sho: Doubling x2
         } else if (currentConfig.level === 4) {
-          mathTgt = (i === 0) ? 7 : 10;
+          mathTgt = (i === 0) ? 7 : 10; // Sho: Bola +5 & Polarity
           reqPolarity = (i % 2 === 0) ? 'trap' : 'shoot';
         } else if (currentConfig.level === 5) {
-          mathTgt = (i === 0) ? 8 : 12;
+          mathTgt = (i === 0) ? 8 : 12; // Ten: Turbo -1 correction
           reqPolarity = (i % 2 === 0) ? 'trap' : 'shoot';
-        } else if (currentConfig.level >= 6) {
-          const solvablePool = [5, 6, 7, 8, 9, 10, 11, 12, 14];
-          mathTgt = solvablePool[(i + currentConfig.level) % solvablePool.length];
+        } else if (currentConfig.level === 6) {
+          mathTgt = 7; // Ten: Linked twins sharing [ 7 ]
           reqPolarity = (i % 2 === 0) ? 'trap' : 'shoot';
+        } else if (currentConfig.level === 7) {
+          mathTgt = (i === 0) ? 8 : 10; // Ten: Ricochet +4
+          reqPolarity = (i % 2 === 0) ? 'trap' : 'shoot';
+        } else if (currentConfig.level <= 9) {
+          const ketsuPool = [7, 8, 9, 10, 12];
+          mathTgt = ketsuPool[(i + currentConfig.level) % ketsuPool.length];
+          reqPolarity = (i % 2 === 0) ? 'trap' : 'shoot';
+        } else {
+          // Bosses & Levels 10+
+          if (isBoss || isLvl100) {
+            mathTgt = 6; // Boss Phase 1
+          } else {
+            const solvablePool = [5, 6, 7, 8, 9, 10, 11, 12, 14];
+            mathTgt = solvablePool[(i + currentConfig.level) % solvablePool.length];
+            reqPolarity = (i % 2 === 0) ? 'trap' : 'shoot';
+          }
         }
         const coreR = isLvl100 ? 58 : (isBoss ? 48 : (kind === 'shooter' ? 32 : (kind === 'dasher' ? 28 : 34)));
         const baseHp = isLvl100 ? 18000 : (isBoss ? 9500 : (1600 + currentConfig.level * 65));
@@ -3672,8 +3778,25 @@ function draw3DProjectile(pr) {
           mathCurrent: 0,
           requiredPolarity: reqPolarity,
           angrySurgeTimer: 0,
-          skidTimer: 0
+          skidTimer: 0,
+          graceCorrectionTimer: 0,
+          bossPhase: (isBoss || isLvl100) ? 1 : 0,
+          bossMaxPhases: (isBoss || isLvl100) ? 3 : 0,
+          bossPhaseTargets: (isBoss || isLvl100) ? [6, 9, 12] : []
         });
+      }
+
+      // Kishotenketsu Ten Twist 2: Linked Twin Tornadoes (Lv. 6, 16, 26...)
+      if (currentConfig.level % 10 === 6 && tornadoes.length >= 2) {
+        tornadoes[0].linkedTwin = tornadoes[1];
+        tornadoes[1].linkedTwin = tornadoes[0];
+        tornadoes[0].isTwin = true;
+        tornadoes[1].isTwin = true;
+      }
+
+      // Hades-Style Tactical Run Perk Offering on Even Levels (2, 4, 6, 8, 10...)
+      if (currentConfig.level >= 2 && currentConfig.level % 2 === 0) {
+        showPerkSelectionOverlay();
       }
 
       // Spawn Volcanoes
@@ -3792,6 +3915,59 @@ function draw3DProjectile(pr) {
     // Authentic Storm Chaser Deployed Ground Probe / Tether Trap
 
     // =========================================================================
+    // HADES-STYLE IN-RUN PERKS & KISHOTENKETSU PHASE PACING
+    // =========================================================================
+    let activeRunPerk = null; // 'round' | 'tether' | 'turbo' | null
+
+    function getKishotenketsuInfo(lvl) {
+      const step = (lvl - 1) % 10;
+      if (step <= 1) {
+        return { phase: 'KI', title: '🎓 ФАЗА KI: Знакомство', color: 'border-emerald-400/50 text-emerald-200 bg-emerald-950/80 shadow-[0_0_10px_rgba(52,211,153,0.3)]' };
+      } else if (step <= 3) {
+        return { phase: 'SHO', title: '⚡ ФАЗА SHO: Развитие', color: 'border-sky-400/50 text-sky-200 bg-sky-950/80 shadow-[0_0_10px_rgba(56,189,248,0.3)]' };
+      } else if (step <= 6) {
+        return { phase: 'TEN', title: '🌀 ФАЗА TEN: Поворот правил', color: 'border-amber-400/50 text-amber-200 bg-amber-950/80 shadow-[0_0_10px_rgba(245,158,11,0.3)]' };
+      } else {
+        return { phase: 'KETSU', title: '👑 ФАЗА KETSU: Экзамен Мастера', color: 'border-rose-400/50 text-rose-200 bg-rose-950/80 shadow-[0_0_10px_rgba(244,63,94,0.3)]' };
+      }
+    }
+
+    function showPerkSelectionOverlay() {
+      const overlay = document.getElementById('perkSelectOverlay');
+      if (overlay) {
+        overlay.classList.remove('hidden');
+      }
+    }
+
+    function selectRunPerk(perkType) {
+      activeRunPerk = perkType;
+      const overlay = document.getElementById('perkSelectOverlay');
+      if (overlay) overlay.classList.add('hidden');
+
+      let perkName = '';
+      if (perkType === 'round') perkName = '🧮 Округлитель (±1)';
+      else if (perkType === 'tether') perkName = '🪝 Гарпун (+4, +35% захват)';
+      else if (perkType === 'turbo') perkName = '⚡ Турбо-Мод (-1/+1)';
+
+      const hudPerk = document.getElementById('hudActivePerkPill');
+      const lblPerk = document.getElementById('lblActivePerkName');
+      if (hudPerk && lblPerk && perkName) {
+        lblPerk.textContent = `⚡ Модуль: ${perkName}`;
+        hudPerk.classList.remove('hidden');
+      }
+
+      showToast(`⚡ Модуль активирован: ${perkName}`);
+      if (typeof SoundEngine !== 'undefined' && SoundEngine.playSuperReady) {
+        SoundEngine.playSuperReady();
+      }
+    }
+
+    function dismissPerkOverlay() {
+      const overlay = document.getElementById('perkSelectOverlay');
+      if (overlay) overlay.classList.add('hidden');
+    }
+
+    // =========================================================================
     // MATHEMATICAL RESONANCE, LOGIC POLARITY & MENTAL MATH HINTS
     // =========================================================================
     function checkPolarityShield(tor, attackCategory, isRicochet) {
@@ -3828,8 +4004,9 @@ function draw3DProjectile(pr) {
       let isMult = false;
       let isInstantSolve = false;
 
+      // Perk 2: Twin Tether gives +4 instead of +3 for single trap!
       if (opType === 'trap') {
-        addVal = 3;
+        addVal = (activeRunPerk === 'tether') ? 4 : 3;
       } else if (opType === 'shoot') {
         addVal = 2;
       } else if (opType === 'ricochet') {
@@ -3840,10 +4017,14 @@ function draw3DProjectile(pr) {
         isMult = true;
       } else if (opType === 'faraday') {
         isInstantSolve = true;
+      } else if (opType === 'saved_resonance') {
+        // Corrected by Turbo -1 pulse
       }
 
       let newVal;
-      if (isInstantSolve) {
+      if (opType === 'saved_resonance') {
+        newVal = tor.mathTarget;
+      } else if (isInstantSolve) {
         newVal = tor.mathTarget;
         spawnDamageNumber(`🧮 = ТОЧНЫЙ ВЗЛОМ! ${newVal}/${tor.mathTarget}`, tor.x, tor.y - 36, '#38bdf8', true, 18);
       } else if (isMult) {
@@ -3860,8 +4041,35 @@ function draw3DProjectile(pr) {
 
       tor.mathCurrent = newVal;
 
+      // Perk 1: Quantum Rounding (±1 from target counts as Resonance with 2.0x damage)
+      if (activeRunPerk === 'round' && (tor.mathCurrent === tor.mathTarget - 1 || tor.mathCurrent === tor.mathTarget + 1)) {
+        const roundDmg = Math.round(Math.max(baseDmg * 2.0, tor.maxHp * 0.35));
+        tor.hp -= roundDmg;
+        tor.hitFlash = 0.4;
+        tor.stasisTimer = 1.8;
+        tor.stasisSlow = 0.25;
+        hitStopTimer = 0.06;
+        screenShake = Math.max(screenShake, 18);
+        spawnDamageNumber(`🧮 КВАНТОВЫЙ РЕЗОНАНС (±1) -${roundDmg}!`, tor.x, tor.y - 50, '#38bdf8', true, 20);
+        spawnShockwave(tor.x, tor.y, '#38bdf8', 190);
+        saveState.coins += 10;
+        saveState.telemetryChips = (saveState.telemetryChips || 0) + 1;
+        writeSaveData();
+        syncHUD();
+        showToast('🧮 КВАНТОВЫЙ РЕЗОНАНС! (±1) +10🪙 +1🧬');
+
+        if (tor.hp > 0) {
+          const lvl = currentConfig ? currentConfig.level : 2;
+          const pool = (lvl === 1) ? [3] : ((lvl === 2) ? [5, 7] : ((lvl === 3) ? [6, 8, 10, 12] : [5, 6, 7, 8, 9, 10, 11, 12, 14]));
+          tor.mathTarget = pool[Math.floor(Math.random() * pool.length)];
+          tor.mathCurrent = 0;
+        }
+        return { dmgMultiplier: 2.0, isOvershoot: false, isExact: true };
+      }
+
       // Exact Match: ⚡ ИДЕАЛЬНЫЙ РЕЗОНАНС!
       if (tor.mathCurrent === tor.mathTarget) {
+        tor.graceCorrectionTimer = 0;
         const resDmg = Math.round(Math.max(baseDmg * 3.0, tor.maxHp * 0.45));
         tor.hp -= resDmg;
         tor.hitFlash = 0.45;
@@ -3887,18 +4095,56 @@ function draw3DProjectile(pr) {
         syncHUD();
         showToast(`⚡ ИДЕАЛЬНЫЙ РЕЗОНАНС [${tor.mathTarget}]! +15🪙 +2🧬`);
 
+        // Kishotenketsu Ten Twist 2: Synchronous Twin Damage Link (Lv. 6, 16, 26...)
+        if (tor.linkedTwin && tor.linkedTwin.hp > 0) {
+          const twin = tor.linkedTwin;
+          const twinDmg = Math.round(twin.hp * 0.50);
+          twin.hp -= twinDmg;
+          twin.hitFlash = 0.4;
+          twin.stasisTimer = 2.0;
+          spawnDamageNumber(`🔗 РЕЗОНАНС БЛИЗНЕЦОВ -${twinDmg}!`, twin.x, twin.y - 40, '#a855f7', true, 20);
+          spawnShockwave(twin.x, twin.y, '#a855f7', 170);
+          triggerLightningStrike(twin.x, twin.y);
+          showToast('🔗 РЕЗОНАНС БЛИЗНЕЦОВ! -50% HP близнеца!');
+        }
+
+        // Kishotenketsu Ketsu Phase: Boss Multi-Phase Lock (Lv. 10, 20, 30...)
+        if (tor.bossPhase && tor.bossPhase < tor.bossMaxPhases) {
+          tor.bossPhase += 1;
+          const nextTgt = tor.bossPhaseTargets[tor.bossPhase - 1] || 12;
+          tor.mathTarget = nextTgt;
+          tor.mathCurrent = 0;
+          spawnDamageNumber(`👑 ВЗЛОМ ФАЗЫ ${tor.bossPhase-1}/${tor.bossMaxPhases}!`, tor.x, tor.y - 65, '#f59e0b', true, 24);
+          spawnPickup('coin', tor.x - 25, tor.y);
+          spawnPickup('coin', tor.x + 25, tor.y);
+          spawnPickup('chip', tor.x, tor.y - 25);
+          spawnPickup('cube', tor.x, tor.y + 25);
+          showToast(`👑 ВЗЛОМ ФАЗЫ ${tor.bossPhase-1}! Броня босса снята! След. код: [ ${nextTgt} ]`);
+          return { dmgMultiplier: 3.0, isOvershoot: false, isExact: true };
+        }
+
         // Generate next resonance code if tornado is still alive
         if (tor.hp > 0) {
           const lvl = currentConfig ? currentConfig.level : 2;
-          const pool = (lvl === 2) ? [5, 7] : ((lvl === 3) ? [6, 8, 10, 12] : [5, 6, 7, 8, 9, 10, 11, 12, 14]);
+          const pool = (lvl === 1) ? [3] : ((lvl === 2) ? [5, 7] : ((lvl === 3) ? [6, 8, 10, 12] : [5, 6, 7, 8, 9, 10, 11, 12, 14]));
           tor.mathTarget = pool[Math.floor(Math.random() * pool.length)];
           tor.mathCurrent = 0;
         }
         return { dmgMultiplier: 3.0, isOvershoot: false, isExact: true };
       }
 
+      // Kishotenketsu Ten Twist 1: 1.8s Grace Window for Turbo -1 Correction if target + 1!
+      if (tor.mathCurrent === tor.mathTarget + 1) {
+        tor.graceCorrectionTimer = 1.8;
+        tor.graceCorrectionTarget = tor.mathTarget;
+        spawnDamageNumber(`⚠️ +1 ПЕРЕБОР! [⚡ ТУРБО ДЛЯ -1]`, tor.x, tor.y - 45, '#fbbf24', true, 16);
+        spawnShockwave(tor.x, tor.y, '#f59e0b', 85);
+        return { dmgMultiplier: 1.0, isGrace: true, isExact: false };
+      }
+
       // Overshoot: ⚠️ ПЕРЕБОР ЧАСТОТЫ!
       if (tor.mathCurrent > tor.mathTarget) {
+        tor.graceCorrectionTimer = 0;
         spawnDamageNumber(`⚠️ ПЕРЕБОР ${tor.mathCurrent}/${tor.mathTarget}! СБРОС 0!`, tor.x, tor.y - 48, '#ef4444', true, 18);
         spawnShockwave(tor.x, tor.y, '#ef4444', 110);
         tor.mathCurrent = 0;
@@ -4138,6 +4384,41 @@ function draw3DProjectile(pr) {
     function activateGadgetTurbo() {
       player.boostTimer = Math.max(player.boostTimer, 1.4);
       SoundEngine.playJetstreamPad();
+
+      // Kishotenketsu Ten Twist 1 & Perk 3: Acoustic Pulse & Grace Correction
+      tornadoes.forEach((tor) => {
+        if (tor.hp > 0 && tor.mathTarget !== undefined) {
+          const d = Math.hypot(tor.x - player.x, tor.y - player.y);
+          if (d < 260) {
+            spawnShockwave(player.x, player.y, '#38bdf8', 130);
+
+            // Saved Resonance via 1.8s Grace Window
+            if (tor.graceCorrectionTimer > 0 && tor.mathCurrent === tor.mathTarget + 1) {
+              tor.graceCorrectionTimer = 0;
+              tor.mathCurrent -= 1; // 6 - 1 = 5
+              spawnDamageNumber(`⚡ СПАСЁННЫЙ РЕЗОНАНС (-1 Гц)! ${tor.mathCurrent}/${tor.mathTarget}`, tor.x, tor.y - 36, '#38bdf8', true, 18);
+              applyMathResonance(tor, 'saved_resonance', spec.bulletDmg * 2.5);
+              return;
+            }
+
+            // Subtraction: if over target
+            if (tor.mathCurrent > tor.mathTarget) {
+              tor.mathCurrent -= 1;
+              spawnDamageNumber(`⚡ ТУРБО-СБРОС -1 Гц! ${tor.mathCurrent}/${tor.mathTarget}`, tor.x, tor.y - 30, '#38bdf8', true, 16);
+              if (tor.mathCurrent === tor.mathTarget) {
+                applyMathResonance(tor, 'saved_resonance', spec.bulletDmg * 2.5);
+              }
+            } else if (activeRunPerk === 'turbo' && tor.mathCurrent === tor.mathTarget - 1) {
+              // Perk 3: Turbo adds +1 if 1 unit away from target!
+              tor.mathCurrent += 1;
+              spawnDamageNumber(`⚡ ТУРБО-ДОКРУТКА +1 Гц! ${tor.mathCurrent}/${tor.mathTarget}`, tor.x, tor.y - 30, '#fde047', true, 16);
+              if (tor.mathCurrent === tor.mathTarget) {
+                applyMathResonance(tor, 'saved_resonance', spec.bulletDmg * 2.5);
+              }
+            }
+          }
+        }
+      });
     }
 
     // Hazard Strikes
@@ -4240,6 +4521,31 @@ function draw3DProjectile(pr) {
     window.addEventListener('keydown', (e) => {
       keys[e.key.toLowerCase()] = true;
       keys[e.code] = true;
+
+      // Perk Selection Overlay Keyboard Shortcuts: 1, 2, 3 or Escape
+      const perkOverlay = document.getElementById('perkSelectOverlay');
+      if (perkOverlay && !perkOverlay.classList.contains('hidden')) {
+        if (e.code === 'Digit1' || e.code === 'KeyX' || e.key === '1') {
+          selectRunPerk('round');
+          e.preventDefault();
+          return;
+        }
+        if (e.code === 'Digit2' || e.code === 'KeyA' || e.key === '2') {
+          selectRunPerk('tether');
+          e.preventDefault();
+          return;
+        }
+        if (e.code === 'Digit3' || e.code === 'KeyB' || e.key === '3') {
+          selectRunPerk('turbo');
+          e.preventDefault();
+          return;
+        }
+        if (e.code === 'Escape') {
+          dismissPerkOverlay();
+          e.preventDefault();
+          return;
+        }
+      }
 
       // 0. Space / Enter / KeyY / KeyG for Modal Navigation without mouse!
       if (e.code === 'Space' || e.code === 'Enter' || e.key === ' ') {
@@ -4745,6 +5051,22 @@ function draw3DProjectile(pr) {
           tor.vy *= dragInertia;
         }
 
+        // Grace Correction Timer Expiration (Ten Twist 1)
+        if (tor.graceCorrectionTimer > 0) {
+          tor.graceCorrectionTimer -= dt;
+          if (tor.graceCorrectionTimer <= 0) {
+            // Expired without Turbo -1 correction -> Overshoot Penalty!
+            spawnDamageNumber(`⚠️ ПЕРЕБОР ${tor.mathCurrent}/${tor.mathTarget}! СБРОС 0!`, tor.x, tor.y - 48, '#ef4444', true, 18);
+            spawnShockwave(tor.x, tor.y, '#ef4444', 110);
+            tor.mathCurrent = 0;
+            tor.angrySurgeTimer = 1.2;
+            tor.hitFlash = 0.25;
+            if (typeof SoundEngine !== 'undefined' && SoundEngine.playDamage) {
+              SoundEngine.playDamage();
+            }
+          }
+        }
+
         tor.x += tor.vx * effectiveSpeedMult * dt;
         tor.y += tor.vy * effectiveSpeedMult * dt;
 
@@ -4821,11 +5143,12 @@ function draw3DProjectile(pr) {
           }
         }
 
-        // Tornado Suction: when tornado funnel comes within radius * 2.1
+        // Tornado Suction: when tornado funnel comes within radius * 2.1 (+35% if Perk 2)
         if (gp.isArmed && !gp.isSucked) {
+          const suctionMult = (activeRunPerk === 'tether') ? 1.35 : 1.0;
           tornadoes.forEach((tor) => {
             const d = Math.hypot(tor.x - gp.x, tor.y - gp.y);
-            if (d < tor.coreRadius * 2.1) {
+            if (d < tor.coreRadius * 2.1 * suctionMult) {
               gp.isSucked = true;
               gp.targetTornado = tor;
             }
@@ -6407,6 +6730,32 @@ function draw3DProjectile(pr) {
         if (deckMathRow) deckMathRow.classList.add('hidden');
       }
 
+      // Kishotenketsu Phase HUD Badge Sync
+      const hudKisho = document.getElementById('hudKishotenketsuBadge');
+      const lblKisho = document.getElementById('lblKishotenketsuPhase');
+      if (hudKisho && lblKisho) {
+        const lvl = (saveState && saveState.currentLevel) || 1;
+        const kInfo = getKishotenketsuInfo(lvl);
+        lblKisho.textContent = kInfo.title;
+        hudKisho.className = `hud-pill px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black border flex items-center gap-1.5 transition-all ${kInfo.color}`;
+      }
+
+      // Active Run Perk Pill Sync
+      const hudPerk = document.getElementById('hudActivePerkPill');
+      const lblPerk = document.getElementById('lblActivePerkName');
+      if (hudPerk && lblPerk) {
+        if (activeRunPerk) {
+          let pName = '';
+          if (activeRunPerk === 'round') pName = '🧮 Округлитель (±1)';
+          else if (activeRunPerk === 'tether') pName = '🪝 Гарпун (+4, +35% захват)';
+          else if (activeRunPerk === 'turbo') pName = '⚡ Турбо-Мод (-1/+1)';
+          lblPerk.textContent = `⚡ Модуль: ${pName}`;
+          hudPerk.classList.remove('hidden');
+        } else {
+          hudPerk.classList.add('hidden');
+        }
+      }
+
       // Handheld Console Gamepad Mode (2 РУКИ) Sync
       const isConsolePad = Boolean(saveState.settings && saveState.settings.consolePadMode);
       const btnToggleConsolePad = document.getElementById('btnToggleConsolePad');
@@ -6961,6 +7310,12 @@ function draw3DProjectile(pr) {
     });
     document.getElementById('saveFileInput')?.addEventListener('change', handleSaveFileSelected);
 
+    // Tactical Run Perk Card Buttons
+    document.getElementById('btnPerkCard1')?.addEventListener('click', () => selectRunPerk('round'));
+    document.getElementById('btnPerkCard2')?.addEventListener('click', () => selectRunPerk('tether'));
+    document.getElementById('btnPerkCard3')?.addEventListener('click', () => selectRunPerk('turbo'));
+    document.getElementById('btnDismissPerks')?.addEventListener('click', () => dismissPerkOverlay());
+
     // Victory & Defeat Modal Buttons
     document.getElementById('btnVicNextLvl')?.addEventListener('click', () => {
       document.getElementById('victoryModal')?.classList.add('hidden');
@@ -7210,6 +7565,14 @@ function draw3DProjectile(pr) {
           if (pkt.gyroSteer && Math.abs(pkt.gyroSteer) > 0.05) {
             virtualJoystick.active = true;
             virtualJoystick.dx = Math.max(-1, Math.min(1, virtualJoystick.dx + pkt.gyroSteer));
+          }
+
+          // Perk Selection via Smartphone Controller Buttons
+          const perkOverlayPkt = document.getElementById('perkSelectOverlay');
+          if (perkOverlayPkt && !perkOverlayPkt.classList.contains('hidden')) {
+            if (pkt.shoot) { selectRunPerk('round'); return; }
+            if (pkt.trap) { selectRunPerk('tether'); return; }
+            if (pkt.turbo) { selectRunPerk('turbo'); return; }
           }
 
           // Action Triggers: Support Victory/Defeat Advance without mouse!

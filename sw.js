@@ -1,4 +1,4 @@
-const CACHE_NAME = 'storm-stars-3d-v3.8';
+const CACHE_NAME = 'storm-stars-3d-v3.9';
 const ASSETS = [
   './',
   './index.html',
