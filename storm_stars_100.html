@@ -110,6 +110,126 @@
     .star-pop {
       animation: starPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
+
+    /* ========================================================================= */
+    /* HANDHELD CONSOLE GAMEPAD DECK (🎮 ДВУМЯ РУКАМИ / ГЕЙМПАД)                 */
+    /* ========================================================================= */
+    .carbon-deck {
+      background: 
+        radial-gradient(ellipse at 50% 25%, rgba(30, 41, 59, 0.65) 0%, rgba(2, 6, 23, 0.98) 100%),
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 2px, transparent 2px, transparent 6px),
+        #030712;
+      border-top: 2px solid rgba(56, 189, 248, 0.4);
+      box-shadow: 0 -14px 45px rgba(0, 0, 0, 0.95), inset 0 2px 12px rgba(56, 189, 248, 0.2);
+    }
+
+    /* Portrait: split screen - canvas top 54%, gamepad deck bottom 46% */
+    .console-pad-active #mapCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100% !important;
+      height: 54% !important;
+    }
+
+    .console-pad-active #consoleGamepadDeck {
+      display: flex !important;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 46% !important;
+      z-index: 25;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .console-pad-active #gameHudBottom {
+      display: none !important;
+    }
+
+    /* Landscape Console Layout: Left and Right Grip Wings docked to screen sides */
+    @media (orientation: landscape) and (min-aspect-ratio: 1.15), (min-width: 900px) and (min-aspect-ratio: 1.1) {
+      .console-pad-active #mapCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      .console-pad-active #consoleGamepadDeck {
+        display: flex !important;
+        position: absolute;
+        inset: 0 !important;
+        height: 100% !important;
+        width: 100% !important;
+        background: transparent !important;
+        border-top: none !important;
+        box-shadow: none !important;
+        pointer-events: none;
+      }
+
+      .console-pad-active #consoleGamepadDeck .deck-wing {
+        pointer-events: auto;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: clamp(210px, 26vw, 290px);
+        background: radial-gradient(circle at center, rgba(15, 23, 42, 0.95) 0%, rgba(2, 6, 23, 0.98) 100%);
+        backdrop-filter: blur(14px);
+        box-shadow: 0 0 45px rgba(0, 0, 0, 0.9);
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .console-pad-active #consoleGamepadDeck .deck-wing-wheel {
+        left: 0;
+        border-radius: 0 28px 28px 0;
+        border-left: none;
+      }
+
+      .console-pad-active #consoleGamepadDeck .deck-wing-buttons {
+        right: 0;
+        border-radius: 28px 0 0 28px;
+        border-right: none;
+      }
+
+      .console-pad-active #consoleGamepadDeck.deck-left-handed .deck-wing-wheel {
+        left: auto;
+        right: 0;
+        border-radius: 28px 0 0 28px;
+        border-right: none;
+        border-left: 1px solid rgba(56, 189, 248, 0.25);
+      }
+
+      .console-pad-active #consoleGamepadDeck.deck-left-handed .deck-wing-buttons {
+        right: auto;
+        left: 0;
+        border-radius: 0 28px 28px 0;
+        border-left: none;
+        border-right: 1px solid rgba(56, 189, 248, 0.25);
+      }
+
+      .console-pad-active #consoleGamepadDeck .deck-bridge {
+        pointer-events: auto;
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(11, 18, 34, 0.92);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 999px;
+        padding: 4px 16px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.75);
+        z-index: 26;
+      }
+    }
   </style>
 </head>
 <body>
@@ -195,9 +315,9 @@
             <span id="lblTilt" class="hidden">Гиро-руль: Вкл</span>
           </button>
 
-          <!-- Smartphone Gamepad WebRTC Pill -->
-          <button id="btnOpenGamepad" type="button" class="hud-pill px-2.5 py-1 rounded-full text-[11px] font-black text-fuchsia-300 border border-fuchsia-400/50 hover:text-white active:scale-95 transition flex items-center gap-1 shadow-sm" title="Подключить смартфон как беспроводной геймпад через WebRTC">
-            <span id="iconGamepad">📱</span> <span id="lblGamepad">Геймпад</span>
+          <!-- Handheld Console Gamepad Mode (2 РУКИ) Toggle Pill -->
+          <button id="btnToggleConsolePad" type="button" class="hud-pill px-2.5 py-1 rounded-full text-[11px] font-black text-fuchsia-300 border border-fuchsia-400/50 hover:text-white active:scale-95 transition flex items-center gap-1 shadow-[0_0_12px_rgba(217,70,239,0.35)]" title="Режим консоли двумя руками: Экран сверху + Пульт снизу">
+            <span>🎮</span> <span id="lblConsolePad">2 РУКИ: ВКЛ</span>
           </button>
 
           <!-- Left-Handed / Right-Handed Mode Pill -->
@@ -323,6 +443,101 @@
 
         <!-- Hidden backward-compatible alias -->
         <button id="btnDropProbe" type="button" class="hidden"></button>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- HANDHELD CONSOLE GAMEPAD DECK (🎮 ДВУМЯ РУКАМИ / ГЕЙМПАД)           -->
+    <!-- =================================================================== -->
+    <div id="consoleGamepadDeck" class="hidden carbon-deck flex items-center justify-between p-2 sm:p-3 overflow-hidden">
+      <!-- Wing 1: GIANT 360° Analog Steering Wheel (Left thumb / Right if Left-Handed) -->
+      <div class="deck-wing deck-wing-wheel flex-1 flex items-center justify-center p-1">
+        <div id="deckWheelZone" class="relative flex items-center justify-center touch-none select-none w-full h-full max-w-[240px] max-h-[240px]">
+          <!-- Giant Wheel Outer Armored Rim -->
+          <div id="deckWheelAnchor" class="relative w-[185px] h-[185px] sm:w-[210px] sm:h-[210px] rounded-full border-4 border-slate-700 bg-slate-900/90 shadow-[0_0_30px_rgba(56,189,248,0.25),inset_0_0_20px_rgba(0,0,0,0.85)] flex items-center justify-center cursor-grab active:cursor-grabbing">
+            <!-- Glowing Degree Ring with Ticks & Grips -->
+            <div id="deckWheelRing" class="absolute inset-1 rounded-full border-2 border-dashed border-sky-400/50 pointer-events-none transition-transform duration-75 flex items-center justify-center">
+              <span class="absolute top-1 text-[9px] font-mono font-black text-sky-400">0°</span>
+              <span class="absolute bottom-1 text-[9px] font-mono font-black text-sky-400">180°</span>
+              <span class="absolute left-1 text-[9px] font-mono font-black text-sky-400">270°</span>
+              <span class="absolute right-1 text-[9px] font-mono font-black text-sky-400">90°</span>
+              <!-- Tactile Grips -->
+              <div class="absolute left-0 top-1/2 -translate-y-1/2 w-3.5 h-10 rounded-r-lg bg-sky-500/80 shadow-[0_0_10px_#38bdf8]"></div>
+              <div class="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-10 rounded-l-lg bg-sky-500/80 shadow-[0_0_10px_#38bdf8]"></div>
+            </div>
+            <!-- Floating Center Touch Knob -->
+            <div id="deckWheelKnob" class="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-sky-400 via-blue-600 to-indigo-800 border-2 border-white shadow-[0_0_20px_rgba(56,189,248,0.6)] flex flex-col items-center justify-center pointer-events-none transition-transform duration-75">
+              <span class="text-xl sm:text-2xl leading-none">🛞</span>
+              <span id="lblDeckWheelAngle" class="text-[9px] font-mono font-black text-sky-200 mt-0.5">0°</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Mini-Bridge (Live Telemetry + Hand Swap + Restart + Garage) -->
+      <div class="deck-bridge flex flex-col items-center justify-center gap-1.5 px-2 select-none">
+        <!-- Telemetry: HP bar & Ammo Dots -->
+        <div class="flex items-center gap-2 bg-slate-900/90 px-2.5 py-1 rounded-xl border border-slate-800 text-[10px]">
+          <div class="flex items-center gap-1 font-mono font-bold text-emerald-300">
+            <span>💚</span> <span id="lblDeckHp">100%</span>
+          </div>
+          <span class="text-slate-600">|</span>
+          <div class="flex items-center gap-1">
+            <span class="text-amber-300">📡</span>
+            <div id="deckAmmoDots" class="flex items-center gap-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#f59e0b]"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#f59e0b]"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#f59e0b]"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bridge Buttons: Handedness Swap, Restart, Garage -->
+        <div class="flex items-center gap-1.5">
+          <button id="btnDeckHandSwap" type="button" class="px-2.5 py-1 rounded-xl text-[10px] font-black bg-slate-800 text-amber-300 border border-amber-400/40 hover:text-white active:scale-95 transition flex items-center gap-1 shadow" title="Переключить раскладку (Левша / Правша)">
+            <span>🤚</span> <span id="lblDeckHand">ПРАВША</span>
+          </button>
+          <button id="btnDeckReset" type="button" class="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-slate-800 text-slate-300 hover:text-white border border-slate-700 active:scale-95 transition flex items-center gap-1" title="Начать уровень заново">
+            <span>↺</span> <span>Заново</span>
+          </button>
+          <button id="btnDeckGarage" type="button" class="px-2.5 py-1 rounded-xl text-[10px] font-black bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white border border-fuchsia-400/40 active:scale-95 transition flex items-center gap-1 shadow" title="Открыть Гараж">
+            <span>🛒</span> <span>Гараж</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Wing 2: 4 HUGE Diamond Action Buttons (Right thumb / Left if Left-Handed) -->
+      <div class="deck-wing deck-wing-buttons flex-1 flex items-center justify-center p-1">
+        <div class="relative w-[185px] h-[185px] sm:w-[210px] sm:h-[210px] flex items-center justify-center touch-none select-none">
+          <!-- Diamond Button 4: TOP / Y - УЛЬТА (💀) -->
+          <button id="btnDeckSuper" type="button" class="absolute top-0 inset-x-auto w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-amber-500 via-yellow-600 to-amber-700 border-3 border-amber-300 text-white font-black text-xs flex flex-col items-center justify-center shadow-[0_0_25px_rgba(245,158,11,0.5)] active:scale-90 transition-transform overflow-hidden" title="УЛЬТА">
+            <div id="deckSuperFill" class="absolute inset-x-0 bottom-0 bg-white/35 transition-all duration-150" style="height:0%;"></div>
+            <span class="text-xl sm:text-2xl leading-none relative z-10">💀</span>
+            <span class="text-[9px] font-black tracking-tight relative z-10 mt-0.5">УЛЬТА</span>
+            <span id="lblDeckSuperPct" class="text-[8px] font-mono text-amber-200 relative z-10">0%</span>
+          </button>
+
+          <!-- Diamond Button 2: LEFT / X - ЗАЛП ВПЕРЁД (🎯) -->
+          <button id="btnDeckShoot" type="button" class="absolute left-0 inset-y-auto w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-sky-500 via-cyan-600 to-blue-700 border-3 border-cyan-300 text-white font-black text-xs flex flex-col items-center justify-center shadow-[0_0_22px_rgba(6,182,212,0.5)] active:scale-90 transition-transform" title="ЗАЛП ВПЕРЁД">
+            <span class="text-xl sm:text-2xl leading-none">🎯</span>
+            <span class="text-[9px] font-black tracking-tight mt-0.5">ЗАЛП</span>
+            <span class="text-[7px] text-cyan-200">ВПЕРЁД</span>
+          </button>
+
+          <!-- Diamond Button 3: RIGHT / B - ТУРБО (⚡) -->
+          <button id="btnDeckTurbo" type="button" class="absolute right-0 inset-y-auto w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700 border-3 border-emerald-300 text-white font-black text-xs flex flex-col items-center justify-center shadow-[0_0_22px_rgba(16,185,129,0.5)] active:scale-90 transition-transform" title="ТУРБО">
+            <span class="text-xl sm:text-2xl leading-none">⚡</span>
+            <span class="text-[9px] font-black tracking-tight mt-0.5">ТУРБО</span>
+            <span class="text-[7px] text-emerald-200">РЫВОК</span>
+          </button>
+
+          <!-- Diamond Button 1: BOTTOM / A - ЛОВУШКА ПОЗАДИ (💣 - Giant Primary Red/Orange 80-92px!) -->
+          <button id="btnDeckTrap" type="button" class="absolute bottom-0 inset-x-auto w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-rose-500 via-red-600 to-amber-600 border-4 border-white text-white font-black text-xs sm:text-sm flex flex-col items-center justify-center shadow-[0_0_30px_rgba(244,63,94,0.7)] active:scale-90 transition-transform" title="ЛОВУШКА СЗАДИ">
+            <span class="text-2xl sm:text-3xl leading-none">💣</span>
+            <span class="font-black tracking-tight mt-0.5">ЛОВУШКА</span>
+            <span class="text-[8px] text-amber-200">СБРОС СЗАДИ</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -508,6 +723,21 @@
                   <button id="btnHandLeft" type="button" class="p-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 font-bold text-left active:scale-95 transition">
                     <div class="font-black text-[11px] flex items-center gap-1"><span>👈</span> Левша</div>
                     <div class="text-[9px] text-slate-400 mt-0.5">Кнопки действий слева, руль справа</div>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Handheld 2-Hands Console Gamepad Mode -->
+              <div class="mt-2 pt-2 border-t border-slate-800">
+                <div class="text-[10px] text-slate-400 font-bold mb-1 uppercase tracking-wide">Режим Геймпада (Управление 2 Руками)</div>
+                <div class="grid grid-cols-2 gap-1.5 text-xs">
+                  <button id="btnGaragePadDeckToggle" type="button" class="p-2 rounded-xl border border-fuchsia-400 bg-fuchsia-950/60 text-fuchsia-200 font-bold text-left active:scale-95 transition">
+                    <div class="font-black text-[11px] flex items-center gap-1"><span>🎮</span> <span id="lblGaragePadDeck">ВКЛ: 2 Руки (Геймпад)</span></div>
+                    <div class="text-[9px] text-slate-400 mt-0.5">Пульт снизу, экран сверху</div>
+                  </button>
+                  <button id="btnGarageWebRTCModal" type="button" class="p-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 font-bold text-left active:scale-95 transition">
+                    <div class="font-black text-[11px] flex items-center gap-1"><span>📱</span> Второй телефон</div>
+                    <div class="text-[9px] text-slate-400 mt-0.5">Подключить по QR / коду</div>
                   </button>
                 </div>
               </div>
@@ -1124,7 +1354,8 @@ const DEFAULT_SAVE_STATE = {
     keyScheme: 'both',   // 'both', 'wasd', 'arrows'
     driveMode: 'brawl',  // 'brawl', 'tank'
     leftHanded: false,   // true = buttons left / wheel right
-    probeMode: 'trap'    // 'trap' (DEFAULT: drop behind) or 'shoot' (fire forward)
+    probeMode: 'trap',   // 'trap' (DEFAULT: drop behind) or 'shoot' (fire forward)
+    consolePadMode: true // true = Handheld 2-Hands Console Deck active
   }
 };
 
@@ -1276,6 +1507,10 @@ function mergeSaveData(base, incoming) {
   }
   if (merged.settings.leftHanded === undefined) merged.settings.leftHanded = false;
   if (!merged.settings.probeMode) merged.settings.probeMode = 'trap';
+  if (incoming.settings && typeof incoming.settings.consolePadMode === 'boolean') {
+    merged.settings.consolePadMode = incoming.settings.consolePadMode;
+  }
+  if (merged.settings.consolePadMode === undefined) merged.settings.consolePadMode = true;
 
   return merged;
 }
@@ -5332,6 +5567,87 @@ function draw3DProjectile(pr) {
         btnHandRight.className = (!isLeft) ? 'p-2 rounded-xl border border-amber-400 bg-amber-950/70 text-amber-200 font-bold text-left shadow-sm' : 'p-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-left';
         btnHandLeft.className = (isLeft) ? 'p-2 rounded-xl border border-amber-400 bg-amber-950/70 text-amber-200 font-bold text-left shadow-sm' : 'p-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-left';
       }
+
+      // Handheld Console Gamepad Mode (2 РУКИ) Sync
+      const isConsolePad = Boolean(saveState.settings && saveState.settings.consolePadMode);
+      const btnToggleConsolePad = document.getElementById('btnToggleConsolePad');
+      const lblConsolePad = document.getElementById('lblConsolePad');
+      const videoContainer = document.getElementById('videoContainer');
+      const consoleDeck = document.getElementById('consoleGamepadDeck');
+      const lblGaragePadDeck = document.getElementById('lblGaragePadDeck');
+      const btnGaragePadDeckToggle = document.getElementById('btnGaragePadDeckToggle');
+
+      if (lblConsolePad && btnToggleConsolePad) {
+        if (isConsolePad) {
+          lblConsolePad.textContent = '2 РУКИ: ВКЛ';
+          btnToggleConsolePad.className = 'hud-pill px-2.5 py-1 rounded-full text-[11px] font-black text-fuchsia-300 border border-fuchsia-400/50 shadow-[0_0_12px_rgba(217,70,239,0.4)] active:scale-95 transition flex items-center gap-1';
+        } else {
+          lblConsolePad.textContent = '2 РУКИ: ВЫКЛ';
+          btnToggleConsolePad.className = 'hud-pill px-2.5 py-1 rounded-full text-[11px] font-bold text-slate-400 border border-slate-700 active:scale-95 transition flex items-center gap-1';
+        }
+      }
+
+      if (lblGaragePadDeck && btnGaragePadDeckToggle) {
+        if (isConsolePad) {
+          lblGaragePadDeck.textContent = 'ВКЛ: 2 Руки (Геймпад)';
+          btnGaragePadDeckToggle.className = 'p-2 rounded-xl border border-fuchsia-400 bg-fuchsia-950/70 text-fuchsia-200 font-bold text-left active:scale-95 transition shadow-sm';
+        } else {
+          lblGaragePadDeck.textContent = 'ВЫКЛ: Обычный экран';
+          btnGaragePadDeckToggle.className = 'p-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-left active:scale-95 transition';
+        }
+      }
+
+      if (videoContainer) {
+        if (isConsolePad) videoContainer.classList.add('console-pad-active');
+        else videoContainer.classList.remove('console-pad-active');
+      }
+
+      if (consoleDeck) {
+        if (isConsolePad) {
+          consoleDeck.classList.remove('hidden');
+          if (isLeft) consoleDeck.classList.add('deck-left-handed');
+          else consoleDeck.classList.remove('deck-left-handed');
+
+          // Sync Deck Super Charge
+          const deckSuperFill = document.getElementById('deckSuperFill');
+          const lblDeckSuperPct = document.getElementById('lblDeckSuperPct');
+          const btnDeckSuper = document.getElementById('btnDeckSuper');
+          const sPct = Math.round(player ? player.superCharge : 0);
+          if (deckSuperFill) deckSuperFill.style.height = `${sPct}%`;
+          if (lblDeckSuperPct) lblDeckSuperPct.textContent = `${sPct}%`;
+          if (btnDeckSuper) {
+            if (sPct >= 100) btnDeckSuper.classList.add('super-ready');
+            else btnDeckSuper.classList.remove('super-ready');
+          }
+
+          // Sync Deck HP & Ammo
+          const lblDeckHp = document.getElementById('lblDeckHp');
+          if (lblDeckHp && player) {
+            const hpPct = Math.max(0, Math.round((player.hp / player.maxHp) * 100));
+            lblDeckHp.textContent = `${hpPct}%`;
+          }
+          const deckAmmoDots = document.getElementById('deckAmmoDots');
+          if (deckAmmoDots && player) {
+            const ammoCount = Math.floor(player.ammo || 0);
+            deckAmmoDots.innerHTML = `
+              <span class="w-2.5 h-2.5 rounded-full ${ammoCount >= 1 ? 'bg-amber-400 shadow-[0_0_6px_#f59e0b]' : 'bg-slate-700'}"></span>
+              <span class="w-2.5 h-2.5 rounded-full ${ammoCount >= 2 ? 'bg-amber-400 shadow-[0_0_6px_#f59e0b]' : 'bg-slate-700'}"></span>
+              <span class="w-2.5 h-2.5 rounded-full ${ammoCount >= 3 ? 'bg-amber-400 shadow-[0_0_6px_#f59e0b]' : 'bg-slate-700'}"></span>
+            `;
+          }
+
+          // Sync Deck Handedness Label
+          const lblDeckHand = document.getElementById('lblDeckHand');
+          if (lblDeckHand) lblDeckHand.textContent = isLeft ? 'ЛЕВША' : 'ПРАВША';
+        } else {
+          consoleDeck.classList.add('hidden');
+        }
+      }
+
+      if (gameHudBottom) {
+        if (isConsolePad) gameHudBottom.classList.add('hidden');
+        else gameHudBottom.classList.remove('hidden');
+      }
     }
 
     // Victory & Defeat Modals
@@ -5867,10 +6183,24 @@ function draw3DProjectile(pr) {
     // Fullscreen canvas resize
     function resizeCanvas() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
-      canvas.style.width = `${window.innerWidth}px`;
-      canvas.style.height = `${window.innerHeight}px`;
+      const container = document.getElementById('videoContainer');
+      const containerW = container ? container.clientWidth : window.innerWidth;
+      const containerH = container ? container.clientHeight : window.innerHeight;
+
+      const isConsolePad = Boolean(saveState && saveState.settings && saveState.settings.consolePadMode);
+      const isPortrait = containerH > containerW;
+
+      let canvasW = containerW;
+      let canvasH = containerH;
+
+      if (isConsolePad && isPortrait) {
+        canvasH = Math.round(containerH * 0.54);
+      }
+
+      canvas.width = Math.round(canvasW * dpr);
+      canvas.height = Math.round(canvasH * dpr);
+      canvas.style.width = `${canvasW}px`;
+      canvas.style.height = `${canvasH}px`;
       ctx.resetTransform();
     }
     window.addEventListener('resize', resizeCanvas);
@@ -6457,6 +6787,14 @@ function draw3DProjectile(pr) {
       showToast(next === 'trap' ? '💣 Режим датчиков: Ловушка позади (Пробел)' : '🎯 Режим датчиков: Залп вперёд (Пробел)');
     }
 
+    function toggleConsolePadMode() {
+      saveState.settings.consolePadMode = !saveState.settings.consolePadMode;
+      writeSaveData();
+      syncHUD();
+      resizeCanvas();
+      showToast(saveState.settings.consolePadMode ? '🎮 Геймпад 2 Руки: ВКЛ (Экран сверху)' : '📱 Обычный экран: ВКЛ');
+    }
+
     function toggleHandedness() {
       saveState.settings.leftHanded = !saveState.settings.leftHanded;
       writeSaveData();
@@ -6475,6 +6813,177 @@ function draw3DProjectile(pr) {
     function closeGamepadModal() {
       const modal = document.getElementById('gamepadModal');
       if (modal) modal.classList.add('hidden');
+    }
+
+    // =========================================================================
+    // HANDHELD CONSOLE DECK CONTROLS (Multi-touch Steering + Action Buttons)
+    // =========================================================================
+    function initDeckControls() {
+      const wheelAnchor = document.getElementById('deckWheelAnchor');
+      const wheelRing = document.getElementById('deckWheelRing');
+      const wheelKnob = document.getElementById('deckWheelKnob');
+      const lblAngle = document.getElementById('lblDeckWheelAngle');
+
+      let activeTouchId = null;
+      let touchCenter = null;
+      const maxRadius = 65;
+
+      function updateWheel(clientX, clientY) {
+        if (!touchCenter) return;
+        const dx = clientX - touchCenter.x;
+        const dy = clientY - touchCenter.y;
+        const dist = Math.hypot(dx, dy);
+
+        const clampedDist = Math.min(dist, maxRadius);
+        const angleRad = Math.atan2(dy, dx);
+        const angleDeg = Math.round((angleRad * 180 / Math.PI + 90 + 360) % 360);
+
+        const knobX = Math.cos(angleRad) * clampedDist;
+        const knobY = Math.sin(angleRad) * clampedDist;
+
+        if (wheelKnob) wheelKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+        if (wheelRing) wheelRing.style.transform = `rotate(${angleDeg}deg)`;
+        if (lblAngle) lblAngle.textContent = `${angleDeg}°`;
+
+        const deadZone = 7;
+        if (dist > deadZone) {
+          const norm = Math.min(1.0, (dist - deadZone) / (maxRadius - deadZone));
+          virtualJoystick.active = true;
+          virtualJoystick.dx = Math.cos(angleRad) * norm;
+          virtualJoystick.dy = Math.sin(angleRad) * norm;
+        } else {
+          virtualJoystick.active = false;
+          virtualJoystick.dx = 0;
+          virtualJoystick.dy = 0;
+        }
+      }
+
+      function resetWheel() {
+        activeTouchId = null;
+        touchCenter = null;
+        virtualJoystick.active = false;
+        virtualJoystick.dx = 0;
+        virtualJoystick.dy = 0;
+        if (wheelKnob) wheelKnob.style.transform = 'translate(0px, 0px)';
+        if (wheelRing) wheelRing.style.transform = 'rotate(0deg)';
+        if (lblAngle) lblAngle.textContent = '0°';
+      }
+
+      if (wheelAnchor) {
+        wheelAnchor.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          if (activeTouchId !== null) return;
+          const touch = e.changedTouches[0];
+          activeTouchId = touch.identifier;
+
+          const rect = wheelAnchor.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const dCenter = Math.hypot(touch.clientX - cx, touch.clientY - cy);
+          touchCenter = (dCenter < 32) ? { x: cx, y: cy } : { x: touch.clientX, y: touch.clientY };
+
+          updateWheel(touch.clientX, touch.clientY);
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+          if (activeTouchId === null) return;
+          for (let i = 0; i < e.changedTouches.length; i++) {
+            const t = e.changedTouches[i];
+            if (t.identifier === activeTouchId) {
+              e.preventDefault();
+              updateWheel(t.clientX, t.clientY);
+              break;
+            }
+          }
+        }, { passive: false });
+
+        const onTouchEnd = (e) => {
+          if (activeTouchId === null) return;
+          for (let i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier === activeTouchId) {
+              resetWheel();
+              break;
+            }
+          }
+        };
+        window.addEventListener('touchend', onTouchEnd);
+        window.addEventListener('touchcancel', onTouchEnd);
+
+        // Pointer / Mouse fallback for desktop
+        let isPointerActive = false;
+        wheelAnchor.addEventListener('pointerdown', (e) => {
+          if (e.pointerType === 'touch') return;
+          isPointerActive = true;
+          const rect = wheelAnchor.getBoundingClientRect();
+          touchCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+          updateWheel(e.clientX, e.clientY);
+        });
+
+        window.addEventListener('pointermove', (e) => {
+          if (!isPointerActive || e.pointerType === 'touch') return;
+          updateWheel(e.clientX, e.clientY);
+        });
+
+        const onPointerUp = (e) => {
+          if (e.pointerType === 'touch') return;
+          if (isPointerActive) {
+            isPointerActive = false;
+            resetWheel();
+          }
+        };
+        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('pointercancel', onPointerUp);
+      }
+
+      // 4 Diamond Action Buttons (Trap, Shoot, Turbo, Super)
+      function setupHoldButton(btnId, actionFn, repeatMs = 160, vibrateMs = 20) {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+
+        let holdTimer = null;
+
+        const startAction = (e) => {
+          if (e) e.preventDefault();
+          if (navigator.vibrate) navigator.vibrate(vibrateMs);
+          actionFn();
+          clearInterval(holdTimer);
+          if (repeatMs > 0) {
+            holdTimer = setInterval(actionFn, repeatMs);
+          }
+        };
+
+        const stopAction = (e) => {
+          clearInterval(holdTimer);
+          holdTimer = null;
+        };
+
+        btn.addEventListener('touchstart', startAction, { passive: false });
+        btn.addEventListener('touchend', stopAction);
+        btn.addEventListener('touchcancel', stopAction);
+
+        btn.addEventListener('pointerdown', (e) => {
+          if (e.pointerType === 'touch') return;
+          startAction(e);
+        });
+        btn.addEventListener('pointerup', (e) => {
+          if (e.pointerType === 'touch') return;
+          stopAction(e);
+        });
+        btn.addEventListener('pointercancel', stopAction);
+        btn.addEventListener('pointerleave', stopAction);
+      }
+
+      // Trap (Bottom A) - Auto-repeat while held
+      setupHoldButton('btnDeckTrap', () => deployGroundProbeBehindCar(), 160, 25);
+
+      // Shoot (Left X) - Auto-repeat while held
+      setupHoldButton('btnDeckShoot', () => fireMainAttackProbe(), 160, 20);
+
+      // Turbo (Right B) - Single boost per tap
+      setupHoldButton('btnDeckTurbo', () => activateGadgetTurbo(), 0, 30);
+
+      // Super (Top Y) - Single trigger per tap
+      setupHoldButton('btnDeckSuper', () => activateSuperAbility(), 0, 40);
     }
 
     window.addEventListener('load', async () => {
@@ -6561,6 +7070,39 @@ function draw3DProjectile(pr) {
 
       const btnToggleHandedness = document.getElementById('btnToggleHandedness');
       if (btnToggleHandedness) btnToggleHandedness.addEventListener('click', toggleHandedness);
+
+      // Handheld Console Gamepad Mode Toggles
+      const btnToggleConsolePad = document.getElementById('btnToggleConsolePad');
+      if (btnToggleConsolePad) btnToggleConsolePad.addEventListener('click', toggleConsolePadMode);
+
+      const btnGaragePadDeckToggle = document.getElementById('btnGaragePadDeckToggle');
+      if (btnGaragePadDeckToggle) btnGaragePadDeckToggle.addEventListener('click', toggleConsolePadMode);
+
+      const btnGarageWebRTCModal = document.getElementById('btnGarageWebRTCModal');
+      if (btnGarageWebRTCModal) btnGarageWebRTCModal.addEventListener('click', openGamepadModal);
+
+      // Deck Bridge Buttons
+      const btnDeckHandSwap = document.getElementById('btnDeckHandSwap');
+      if (btnDeckHandSwap) btnDeckHandSwap.addEventListener('click', () => {
+        if (navigator.vibrate) navigator.vibrate(15);
+        toggleHandedness();
+      });
+
+      const btnDeckReset = document.getElementById('btnDeckReset');
+      if (btnDeckReset) btnDeckReset.addEventListener('click', () => {
+        if (navigator.vibrate) navigator.vibrate(15);
+        setupLevel(saveState.currentLevel || 1);
+        showToast('↺ Уровень перезапущен');
+      });
+
+      const btnDeckGarage = document.getElementById('btnDeckGarage');
+      if (btnDeckGarage) btnDeckGarage.addEventListener('click', () => {
+        if (navigator.vibrate) navigator.vibrate(15);
+        openGarage('cars');
+      });
+
+      // Initialize Console Deck Giant Steering Wheel and Action Buttons
+      initDeckControls();
 
       const btnProbeTrap = document.getElementById('btnProbeTrap');
       if (btnProbeTrap) {
