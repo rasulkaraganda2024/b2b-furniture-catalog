@@ -161,6 +161,11 @@
           <button id="btnToggleDriveMode" type="button" class="hud-pill px-2.5 py-1 rounded-full text-[11px] font-black text-emerald-300 border border-emerald-400/40 hover:text-white active:scale-95 transition flex items-center gap-1 shadow-sm" title="Режим вождения: BRAWL (8-направл.) / ТАНК (Дрифт)">
             <span>🕹️</span> <span id="lblDriveMode">BRAWL</span>
           </button>
+
+          <!-- Probe Mode Pill (Rear Trap vs Forward Shot) -->
+          <button id="btnToggleProbeMode" type="button" class="hud-pill px-2.5 py-1 rounded-full text-[11px] font-black text-rose-300 border border-rose-400/50 hover:text-white active:scale-95 transition flex items-center gap-1 shadow-sm" title="Режим датчиков: Ловушка позади / Залп вперёд (Пробел)">
+            <span id="iconProbeMode">💣</span> <span id="lblProbeMode">ЛОВУШКА СЗАДИ</span>
+          </button>
         </div>
 
         <!-- Center: Brawl Stars Trophies, Coins, Telemetry Chips & Total Stars -->
@@ -193,6 +198,11 @@
           <!-- Smartphone Gamepad WebRTC Pill -->
           <button id="btnOpenGamepad" type="button" class="hud-pill px-2.5 py-1 rounded-full text-[11px] font-black text-fuchsia-300 border border-fuchsia-400/50 hover:text-white active:scale-95 transition flex items-center gap-1 shadow-sm" title="Подключить смартфон как беспроводной геймпад через WebRTC">
             <span id="iconGamepad">📱</span> <span id="lblGamepad">Геймпад</span>
+          </button>
+
+          <!-- Left-Handed / Right-Handed Mode Pill -->
+          <button id="btnToggleHandedness" type="button" class="hud-pill px-2.5 py-1 rounded-full text-[11px] font-black text-amber-300 border border-amber-400/50 hover:text-white active:scale-95 transition flex items-center gap-1 shadow-sm" title="Переключить раскладку: Правша / Левша">
+            <span>🤚</span> <span id="lblHandedness">ПРАВША</span>
           </button>
           <button id="btnAudioToggle" type="button" class="icon-btn hidden" title="Звук и музыка вкл/выкл">
             <span id="iconAudio">🔊</span>
@@ -284,22 +294,35 @@
         </button>
       </div>
 
-      <div class="relative w-36 h-28 sm:w-40 sm:h-32 flex items-end justify-end pointer-events-auto">
-        <button id="btnBoost" type="button" class="absolute left-0 bottom-1 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 text-slate-950 font-black text-[10px] border-2 border-emerald-100 active:scale-90 transition flex flex-col items-center justify-center leading-none shadow-lg" title="Гаджет: Турбо-рывок (Shift)">
-          <span class="text-base sm:text-lg">⚡</span>
-          <span class="text-[8px] mt-0.5">ТУРБО</span>
-        </button>
-
-        <button id="btnSuperAbility" type="button" class="absolute left-3 top-0 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-800/95 text-amber-300 font-black text-[10px] border-2 border-amber-400/50 active:scale-90 transition flex flex-col items-center justify-center leading-none overflow-hidden shadow-lg" title="УЛЬТА (Q или Правый клик)">
+      <div id="hudActionCluster" class="relative w-44 h-36 sm:w-52 sm:h-40 flex items-end justify-end pointer-events-auto select-none">
+        <!-- Button 4: Super / Ult (Top-Left of cluster) -->
+        <button id="btnSuperAbility" type="button" class="absolute left-1 top-0 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-800/95 text-amber-300 font-black text-[10px] border-2 border-amber-400/50 active:scale-90 transition flex flex-col items-center justify-center leading-none overflow-hidden shadow-lg" title="УЛЬТА (Q, R или Enter)">
           <div id="superFillBar" class="inset-x-0 bottom-0 bg-gradient-to-t from-amber-500 to-yellow-300 opacity-45 pointer-events-none transition-all duration-150" style="position:absolute; height:0%;"></div>
           <span class="text-lg sm:text-xl relative z-10">💀</span>
           <span id="lblSuperPct" class="text-[8px] sm:text-[9px] font-mono relative z-10">0%</span>
         </button>
 
-        <button id="btnDropProbe" type="button" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-rose-500 via-red-600 to-orange-600 text-white font-black text-[10px] sm:text-xs border-[3px] border-white active:scale-90 transition flex flex-col items-center justify-center gap-0.5 shadow-xl" title="Выстрел зондом (Пробел или Левый клик)">
-          <span class="text-2xl sm:text-3xl leading-none">📡</span>
-          <span>ДАТЧИК</span>
+        <!-- Button 3: Turbo Boost (Far Left Bottom) -->
+        <button id="btnBoost" type="button" class="absolute left-0 bottom-1 w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 text-slate-950 font-black text-[10px] border-2 border-emerald-100 active:scale-90 transition flex flex-col items-center justify-center leading-none shadow-lg" title="Гаджет: Турбо-рывок (Shift, E или ПКМ)">
+          <span class="text-base sm:text-lg">⚡</span>
+          <span class="text-[8px] mt-0.5 font-black">ТУРБО</span>
         </button>
+
+        <!-- Button 2: Fire Forward (Top-Right) -->
+        <button id="btnFireForward" type="button" class="absolute right-0 top-1 w-15 h-15 sm:w-17 sm:h-17 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-white font-black text-[10px] border-2 border-cyan-100 active:scale-90 transition flex flex-col items-center justify-center leading-none shadow-lg" title="Залп вперёд (F или Левый клик)">
+          <span class="text-lg sm:text-xl">🎯</span>
+          <span class="text-[8px] mt-0.5 font-black">ЗАЛП</span>
+        </button>
+
+        <!-- Button 1: Giant Rear Ground Trap (Bottom-Right) -->
+        <button id="btnDeployTrap" type="button" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-rose-500 via-red-600 to-amber-600 text-white font-black text-[10px] sm:text-xs border-[3px] border-white active:scale-90 transition flex flex-col items-center justify-center gap-0.5 shadow-xl" title="Сбросить ловушку позади машины (Пробел или C)">
+          <span class="text-2xl sm:text-3xl leading-none">💣</span>
+          <span class="font-black tracking-tight">ЛОВУШКА</span>
+          <span class="text-[7px] text-amber-200 opacity-90">СБРОС СЗАДИ</span>
+        </button>
+
+        <!-- Hidden backward-compatible alias -->
+        <button id="btnDropProbe" type="button" class="hidden"></button>
       </div>
     </div>
 
@@ -456,6 +479,37 @@
                   <div class="font-black text-[11px] flex items-center gap-1"><span>🚗</span> ТАНК / АВТО-ДРИФТ</div>
                   <div class="text-[9px] text-slate-400 mt-0.5">W/Вверх газ, S/Вниз назад, A/D поворот руля влево/вправо</div>
                 </button>
+              </div>
+            </div>
+
+            <!-- Probe Mode & Handedness Selectors -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-800">
+              <div>
+                <div class="text-[10px] text-slate-400 font-bold mb-1 uppercase tracking-wide">Действие Пробела (Режим Датчиков)</div>
+                <div class="grid grid-cols-2 gap-1.5 text-xs">
+                  <button id="btnProbeTrap" type="button" class="p-2 rounded-xl border border-rose-400 bg-rose-950/60 text-rose-200 font-bold text-left active:scale-95 transition">
+                    <div class="font-black text-[11px] flex items-center gap-1"><span>💣</span> Ловушка позади</div>
+                    <div class="text-[9px] text-slate-400 mt-0.5">Сброс сзади: захват ядра и лазерные цепи</div>
+                  </button>
+                  <button id="btnProbeShoot" type="button" class="p-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 font-bold text-left active:scale-95 transition">
+                    <div class="font-black text-[11px] flex items-center gap-1"><span>🎯</span> Залп вперёд</div>
+                    <div class="text-[9px] text-slate-400 mt-0.5">Прямой выстрел в сторону автоприцела</div>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div class="text-[10px] text-slate-400 font-bold mb-1 uppercase tracking-wide">Раскладка для Левши / Правши</div>
+                <div class="grid grid-cols-2 gap-1.5 text-xs">
+                  <button id="btnHandRight" type="button" class="p-2 rounded-xl border border-amber-400 bg-amber-950/60 text-amber-200 font-bold text-left active:scale-95 transition">
+                    <div class="font-black text-[11px] flex items-center gap-1"><span>👉</span> Правша</div>
+                    <div class="text-[9px] text-slate-400 mt-0.5">Руль слева, кнопки действий справа</div>
+                  </button>
+                  <button id="btnHandLeft" type="button" class="p-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 font-bold text-left active:scale-95 transition">
+                    <div class="font-black text-[11px] flex items-center gap-1"><span>👈</span> Левша</div>
+                    <div class="text-[9px] text-slate-400 mt-0.5">Кнопки действий слева, руль справа</div>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -747,9 +801,9 @@
   </div>
 
   <!-- FULL-SCREEN ESPORTS CONTROLLER UI (ACTIVE IN GAMEPAD MODE - OUTSIDE .app-shell!) -->
-  <div id="phoneControllerUI" class="hidden fixed inset-0 z-50 bg-[#02050d] text-white flex-col justify-between p-3 sm:p-5 select-none touch-none overscroll-none overflow-hidden">
+  <div id="phoneControllerUI" class="hidden fixed inset-0 z-50 bg-[#02050d] text-white flex-col justify-between p-2 sm:p-4 select-none touch-none overscroll-none overflow-hidden">
     <!-- Top Telemetry Header -->
-    <div class="flex items-center justify-between px-3 py-2 bg-slate-900/95 rounded-2xl border border-slate-800 shadow-lg">
+    <div class="flex items-center justify-between px-3 py-1.5 bg-slate-900/95 rounded-2xl border border-slate-800 shadow-xl">
       <div class="flex items-center gap-2 flex-wrap">
         <span id="padConnDot" class="w-3 h-3 rounded-full bg-amber-400 animate-pulse"></span>
         <span id="padConnStatusLabel" class="text-[11px] font-bold text-amber-300">Поиск ПК...</span>
@@ -762,14 +816,18 @@
         <div id="padPingBadge" class="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30">
           ⚡ -- ms
         </div>
-        <button id="btnPadDisconnect" type="button" class="text-[11px] font-bold text-slate-300 hover:text-rose-400 px-3 py-1 bg-slate-800 rounded-xl border border-slate-700 active:scale-95">
+        <!-- 1-Tap Handedness Swap on Phone -->
+        <button id="btnPadHandToggle" type="button" class="text-[10px] font-black text-amber-300 px-2.5 py-1 bg-slate-800/90 rounded-xl border border-amber-400/40 active:scale-95 transition flex items-center gap-1 shadow">
+          <span>🤚</span> <span id="lblPadHand">ПРАВША</span>
+        </button>
+        <button id="btnPadDisconnect" type="button" class="text-[10px] font-bold text-slate-300 hover:text-rose-400 px-2.5 py-1 bg-slate-800 rounded-xl border border-slate-700 active:scale-95 transition">
           ✕ В игру
         </button>
       </div>
     </div>
 
     <!-- Telemetry Dashboard: HP, Ammo, Super -->
-    <div class="grid grid-cols-3 gap-2 px-1 my-1.5">
+    <div class="grid grid-cols-3 gap-2 px-1 my-1">
       <!-- HP Bar -->
       <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-center">
         <div class="flex justify-between text-[10px] font-black text-slate-400 mb-1">
@@ -794,7 +852,7 @@
         </div>
       </div>
 
-      <!-- Super Charge Bar -->
+      <!-- Super Bar -->
       <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-center">
         <div class="flex justify-between text-[10px] font-black text-slate-400 mb-1">
           <span>💥 УЛЬТА</span>
@@ -806,53 +864,67 @@
       </div>
     </div>
 
-    <!-- Main Controls Area: Left 360° Joystick Arena, Right Action Buttons -->
-    <div class="flex-1 flex flex-row items-center justify-between px-2 sm:px-8 gap-4 relative min-h-0">
-      <!-- Left: Virtual Joystick -->
-      <div class="w-1/2 h-full flex flex-col items-center justify-center relative touch-none select-none">
-        <div id="padTouchArea" class="w-40 h-40 sm:w-56 sm:h-56 rounded-full bg-slate-900/95 border-4 border-cyan-500/60 relative flex items-center justify-center shadow-[0_0_35px_rgba(6,182,212,0.3)] active:border-cyan-300 transition-colors">
-          <!-- Crosshairs -->
-          <div class="absolute inset-x-0 top-1/2 h-px bg-slate-800 pointer-events-none"></div>
-          <div class="absolute inset-y-0 left-1/2 w-px bg-slate-800 pointer-events-none"></div>
-          <div class="absolute inset-4 rounded-full border-2 border-dashed border-cyan-500/35 pointer-events-none"></div>
-          <!-- Thumbstick Handle -->
-          <div id="padStickThumb" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-700 shadow-[0_0_25px_rgba(14,165,233,0.7)] border-2 border-white pointer-events-none flex flex-col items-center justify-center text-2xl font-black">
-            <span>🕹️</span>
-            <span class="text-[8px] text-white/90 tracking-wider">РУЛЬ</span>
+    <!-- MAIN CONSOLE GAMEPAD CONTROLS AREA (Adaptive Portrait / Landscape & Left-Handed Swap) -->
+    <div id="padControlsArea" class="flex-1 flex items-center justify-between px-2 sm:px-6 gap-2 sm:gap-6 relative min-h-0 w-full">
+      
+      <!-- ZONE A: GIANT ARMORED STEERING WHEEL + 360° ANALOG RING (Floating Touch Anchor) -->
+      <div id="padWheelZone" class="w-1/2 h-full flex flex-col items-center justify-center relative touch-none select-none">
+        <div id="padTouchArea" class="w-48 h-48 sm:w-60 sm:h-60 max-w-[46vw] max-h-[46vw] rounded-full bg-slate-900/95 border-4 border-cyan-400/80 relative flex items-center justify-center shadow-[0_0_40px_rgba(6,182,212,0.4)] active:border-cyan-200 transition-colors">
+          <!-- Degree Ticks -->
+          <div class="absolute inset-1.5 rounded-full border border-dashed border-cyan-400/30 pointer-events-none"></div>
+          <div class="absolute inset-x-0 top-1/2 h-0.5 bg-cyan-500/30 pointer-events-none"></div>
+          <div class="absolute inset-y-0 left-1/2 w-0.5 bg-cyan-500/30 pointer-events-none"></div>
+          <!-- Tactile Grip Notches -->
+          <div class="absolute left-1 inset-y-10 w-2 bg-slate-800 rounded-full pointer-events-none border border-cyan-400/40"></div>
+          <div class="absolute right-1 inset-y-10 w-2 bg-slate-800 rounded-full pointer-events-none border border-cyan-400/40"></div>
+          <!-- Giant Center Knob Hub (🛞 РУЛЬ) -->
+          <div id="padStickThumb" class="w-20 h-20 sm:w-26 sm:h-26 rounded-full bg-gradient-to-br from-cyan-400 via-sky-600 to-blue-800 border-4 border-white shadow-[0_0_30px_rgba(14,165,233,0.8)] pointer-events-none flex flex-col items-center justify-center text-2xl sm:text-3xl font-black select-none transition-transform duration-75">
+            <span>🛞</span>
+            <span class="text-[8px] font-black tracking-widest text-white/90 mt-0.5 uppercase">РУЛЬ</span>
           </div>
         </div>
       </div>
 
-      <!-- Right: Combat Action Buttons -->
-      <div class="w-1/2 h-full flex flex-col justify-center items-center sm:items-end gap-4 py-2 select-none touch-none">
-        <!-- Top Row: Turbo + Super -->
-        <div class="flex items-center gap-3 sm:gap-5">
-          <button id="btnPadTurbo" type="button" class="w-18 h-18 sm:w-24 sm:h-24 p-3 rounded-full bg-gradient-to-br from-emerald-400 to-teal-700 border-2 border-emerald-200 text-slate-950 font-black text-xs sm:text-sm flex flex-col items-center justify-center shadow-xl active:scale-90 transition-transform">
-            <span class="text-2xl sm:text-3xl">⚡</span>
-            <span>ТУРБО</span>
+      <!-- ZONE B: 4 HUGE CONSOLE GAMEPAD ACTION BUTTONS (Diamond Layout: X, Y, A, B style) -->
+      <div id="padActionsZone" class="w-1/2 h-full flex items-center justify-center relative touch-none select-none">
+        <div class="relative w-48 h-48 sm:w-60 sm:h-60 max-w-[46vw] max-h-[46vw] flex items-center justify-center">
+          
+          <!-- Button 4: TOP OF DIAMOND (💀 УЛЬТА - 78px-88px, Gold/Purple) -->
+          <button id="btnPadSuper" type="button" class="absolute top-0 inset-x-auto w-18 h-18 sm:w-22 sm:h-22 rounded-full bg-gradient-to-br from-amber-400 via-purple-600 to-indigo-800 border-3 border-amber-300 text-white font-black text-xs flex flex-col items-center justify-center shadow-xl active:scale-90 transition-transform">
+            <span class="text-2xl sm:text-3xl leading-none">💀</span>
+            <span class="text-[9px] font-black mt-0.5">УЛЬТА</span>
           </button>
 
-          <button id="btnPadSuper" type="button" class="w-18 h-18 sm:w-24 sm:h-24 p-3 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-600 border-2 border-yellow-200 text-white font-black text-xs sm:text-sm flex flex-col items-center justify-center shadow-xl active:scale-90 transition-transform">
-            <span class="text-2xl sm:text-3xl">💀</span>
-            <span>УЛЬТА</span>
+          <!-- Button 2: LEFT OF DIAMOND (🎯 ЗАЛП ВПЕРЁД - 78px-88px, Cyan/Blue) -->
+          <button id="btnPadShoot" type="button" class="absolute left-0 inset-y-auto w-18 h-18 sm:w-22 sm:h-22 rounded-full bg-gradient-to-br from-cyan-400 via-blue-600 to-indigo-700 border-3 border-cyan-200 text-white font-black text-xs flex flex-col items-center justify-center shadow-xl active:scale-90 transition-transform">
+            <span class="text-2xl sm:text-3xl leading-none">🎯</span>
+            <span class="text-[9px] font-black mt-0.5">ЗАЛП</span>
           </button>
+
+          <!-- Button 3: RIGHT OF DIAMOND (⚡ ТУРБО-РЫВОК - 78px-88px, Emerald Green) -->
+          <button id="btnPadTurbo" type="button" class="absolute right-0 inset-y-auto w-18 h-18 sm:w-22 sm:h-22 rounded-full bg-gradient-to-br from-emerald-400 via-teal-600 to-green-800 border-3 border-emerald-200 text-slate-950 font-black text-xs flex flex-col items-center justify-center shadow-xl active:scale-90 transition-transform">
+            <span class="text-2xl sm:text-3xl leading-none">⚡</span>
+            <span class="text-[9px] font-black mt-0.5">ТУРБО</span>
+          </button>
+
+          <!-- Button 1: BOTTOM OF DIAMOND (💣 ЛОВУШКА СЗАДИ - 96px-110px, Giant Primary Button!) -->
+          <button id="btnPadTrap" type="button" class="absolute bottom-0 inset-x-auto w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-rose-500 via-red-600 to-amber-600 border-4 border-white text-white font-black text-xs sm:text-sm flex flex-col items-center justify-center shadow-[0_0_35px_rgba(244,63,94,0.7)] active:scale-90 transition-transform">
+            <span class="text-3xl sm:text-4xl leading-none">💣</span>
+            <span class="font-black tracking-tight mt-0.5">ЛОВУШКА</span>
+            <span class="text-[8px] text-amber-200 opacity-90">СБРОС СЗАДИ</span>
+          </button>
+
         </div>
-
-        <!-- Bottom Row: Huge Main Attack Probe Button -->
-        <button id="btnPadShoot" type="button" class="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-br from-rose-500 via-red-600 to-orange-600 border-4 border-white text-white font-black text-sm sm:text-base flex flex-col items-center justify-center shadow-[0_0_35px_rgba(244,63,94,0.6)] active:scale-90 transition-transform">
-          <span class="text-3xl sm:text-4xl">📡</span>
-          <span class="mt-0.5">ОГОНЬ</span>
-          <span class="text-[9px] text-amber-200">ЗАЖМИ = АВТО</span>
-        </button>
       </div>
+
     </div>
 
-    <!-- Bottom Bar: Gyroscope Steering Toggle & PIN Info -->
-    <div class="flex items-center justify-between px-3 py-1.5 bg-slate-900/90 rounded-xl border border-slate-800 text-[11px] text-slate-400">
-      <button id="btnPadGyroToggle" type="button" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-emerald-300 active:scale-95 transition">
-        <span>📲</span> <span>Гиро-руль наклоном: <b id="lblPadGyro">ВЫКЛ</b></span>
+    <!-- Bottom Bar: Gyroscope Steering Toggle & Info -->
+    <div class="flex items-center justify-between px-3 py-1 bg-slate-900/80 rounded-xl border border-slate-800 text-[11px] text-slate-400 shadow-md">
+      <button id="btnPadGyroToggle" type="button" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800 text-emerald-300 active:scale-95 transition">
+        <span>📲</span> <span>Руль наклоном: <b id="lblPadGyro">ВЫКЛ</b></span>
       </button>
-      <span id="padRoomCodeLabel" class="font-mono text-xs font-bold text-fuchsia-300">КОД: ----</span>
+      <span class="font-mono text-[10px] text-slate-500 uppercase">Storm Stars Esports Pro Controller</span>
     </div>
   </div>
 
@@ -1050,7 +1122,9 @@ const DEFAULT_SAVE_STATE = {
     ultra3D: true,
     soundMode: '3d_100', // '3d_100', 'eco_50', 'mute'
     keyScheme: 'both',   // 'both', 'wasd', 'arrows'
-    driveMode: 'brawl'   // 'brawl', 'tank'
+    driveMode: 'brawl',  // 'brawl', 'tank'
+    leftHanded: false,   // true = buttons left / wheel right
+    probeMode: 'trap'    // 'trap' (DEFAULT: drop behind) or 'shoot' (fire forward)
   }
 };
 
@@ -1194,6 +1268,14 @@ function mergeSaveData(base, incoming) {
   }
   if (!merged.settings.keyScheme) merged.settings.keyScheme = 'both';
   if (!merged.settings.driveMode) merged.settings.driveMode = 'brawl';
+  if (typeof incoming.settings.leftHanded === 'boolean') {
+    merged.settings.leftHanded = incoming.settings.leftHanded;
+  }
+  if (['trap', 'shoot'].includes(incoming.settings.probeMode)) {
+    merged.settings.probeMode = incoming.settings.probeMode;
+  }
+  if (merged.settings.leftHanded === undefined) merged.settings.leftHanded = false;
+  if (!merged.settings.probeMode) merged.settings.probeMode = 'trap';
 
   return merged;
 }
@@ -1946,8 +2028,45 @@ const SoundEngine = {
       src.connect(flt);
       flt.connect(g);
       g.connect(this.compressor);
+
       src.start(now);
-      src.stop(now + 0.3);
+      src.stop(now + 0.35);
+    } catch (e) {}
+  },
+
+  playCoreDetonation() {
+    if (!this.ctx || this.soundMode === 'mute') return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(320, now);
+      this.safeExpRamp(osc.frequency, 45, now + 0.35);
+      g.gain.setValueAtTime(0.28, now);
+      this.safeExpRamp(g.gain, 0.001, now + 0.4);
+      osc.connect(g);
+      g.connect(this.compressor);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    } catch (e) {}
+  },
+
+  playProbeArmed() {
+    if (!this.ctx || this.soundMode === 'mute') return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, now);
+      this.safeExpRamp(osc.frequency, 1320, now + 0.08);
+      g.gain.setValueAtTime(0.12, now);
+      this.safeExpRamp(g.gain, 0.001, now + 0.1);
+      osc.connect(g);
+      g.connect(this.compressor);
+      osc.start(now);
+      osc.stop(now + 0.1);
     } catch (e) {}
   },
 
@@ -3045,6 +3164,7 @@ function draw3DProjectile(pr) {
     let hazardStrikes = [];
     let pickups = [];
     let projectiles = [];
+    let groundProbes = [];
     let particles = [];
     let floatingTexts = [];
     let shockwaves = [];
@@ -3122,6 +3242,7 @@ function draw3DProjectile(pr) {
       hazardStrikes = [];
       pickups = [];
       projectiles = [];
+      groundProbes = [];
       particles = [];
       floatingTexts = [];
       shockwaves = [];
@@ -3265,6 +3386,55 @@ function draw3DProjectile(pr) {
     }
 
     // Main Attack Probe
+
+    // Distance from point (px, py) to segment (x1, y1)-(x2, y2)
+    function distToSegment(px, py, x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const lenSq = dx * dx + dy * dy;
+      if (lenSq === 0) return Math.hypot(px - x1, py - y1);
+      let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+      t = Math.max(0, Math.min(1, t));
+      return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+    }
+
+    // Authentic Storm Chaser Deployed Ground Probe / Tether Trap
+    function deployGroundProbeBehindCar() {
+      if (!player || player.ammo < 1.0) return;
+      player.ammo -= 1.0;
+
+      // Deploy directly behind tailgate bumper
+      const rearDist = 34;
+      const dropX = player.x - Math.cos(player.angle) * rearDist;
+      const dropY = player.y - Math.sin(player.angle) * rearDist;
+
+      // Max 6 active ground probes (oldest detonates if 7th dropped)
+      if (groundProbes.length >= 6) {
+        const oldest = groundProbes.shift();
+        if (oldest) spawnShockwave(oldest.x, oldest.y, '#f59e0b', 55);
+      }
+
+      groundProbes.push({
+        x: dropX,
+        y: dropY,
+        z: 0,
+        angle: player.angle,
+        isArmed: false,
+        armTimer: 0.45,
+        isSucked: false,
+        targetTornado: null,
+        detonated: false,
+        scanAngle: Math.random() * Math.PI * 2
+      });
+
+      SoundEngine.playBlowoff();
+      spawnShockwave(dropX, dropY, '#38bdf8', 40);
+
+      if (GamepadEngine && GamepadEngine.sendVibrate) {
+        GamepadEngine.sendVibrate(30);
+      }
+    }
+
     function fireMainAttackProbe() {
       if (!player || player.ammo < 1.0) return;
       player.ammo -= 1.0;
@@ -3488,13 +3658,31 @@ function draw3DProjectile(pr) {
       keys[e.key.toLowerCase()] = true;
       keys[e.code] = true;
 
-      // 1. Space fires probe immediately + activates continuous auto-fire while held!
+      // 1. Space uses active probeMode (by default drops ground probe trap behind car!)
       if (e.code === 'Space' || e.key === ' ') {
         keys[' '] = true;
         keys['space'] = true;
         if (appMode === 'game' && !isGamePaused) {
-          fireMainAttackProbe();
+          if ((saveState.settings && saveState.settings.probeMode) === 'shoot') {
+            fireMainAttackProbe();
+          } else {
+            deployGroundProbeBehindCar();
+          }
           e.preventDefault();
+        }
+      }
+
+      // KeyF or Left Click: always fires forward probe
+      if (e.code === 'KeyF' || e.key.toLowerCase() === 'f') {
+        if (appMode === 'game' && !isGamePaused) {
+          fireMainAttackProbe();
+        }
+      }
+
+      // KeyC: always drops ground probe trap behind car
+      if (e.code === 'KeyC' || e.key.toLowerCase() === 'c') {
+        if (appMode === 'game' && !isGamePaused) {
+          deployGroundProbeBehindCar();
         }
       }
 
@@ -3718,10 +3906,14 @@ function draw3DProjectile(pr) {
         if (keys['arrowright']) moveX += 1;
       }
 
-      // Continuous auto-fire while Space is held down
+      // Continuous auto-action while Space is held down (trap or shoot)
       if (keys[' '] || keys['space']) {
         if (player.ammo >= 1.0) {
-          fireMainAttackProbe();
+          if ((saveState.settings && saveState.settings.probeMode) === 'shoot') {
+            fireMainAttackProbe();
+          } else {
+            deployGroundProbeBehindCar();
+          }
         }
       }
 
@@ -3895,8 +4087,13 @@ function draw3DProjectile(pr) {
           return;
         }
 
-        tor.x += tor.vx * dt;
-        tor.y += tor.vy * dt;
+        if (tor.stasisTimer > 0) {
+          tor.stasisTimer -= dt;
+        }
+        const effectiveSpeedMult = (tor.stasisTimer > 0) ? (tor.stasisSlow || 0.72) : 1.0;
+
+        tor.x += tor.vx * effectiveSpeedMult * dt;
+        tor.y += tor.vy * effectiveSpeedMult * dt;
 
         if (tor.x < tor.coreRadius + 30 || tor.x > ARENA_W - tor.coreRadius - 30) {
           tor.vx = -tor.vx;
@@ -3960,6 +4157,117 @@ function draw3DProjectile(pr) {
 
       tornadoTrails.forEach((tr) => { tr.life -= dt; });
       tornadoTrails = tornadoTrails.filter(tr => tr.life > 0);
+
+      // Ground Probes & Tether Traps Update
+      groundProbes.forEach((gp) => {
+        if (!gp.isArmed) {
+          gp.armTimer -= dt;
+          if (gp.armTimer <= 0) {
+            gp.isArmed = true;
+            SoundEngine.playProbeArmed();
+          }
+        }
+
+        // Tornado Suction: when tornado funnel comes within radius * 2.1
+        if (gp.isArmed && !gp.isSucked) {
+          tornadoes.forEach((tor) => {
+            const d = Math.hypot(tor.x - gp.x, tor.y - gp.y);
+            if (d < tor.coreRadius * 2.1) {
+              gp.isSucked = true;
+              gp.targetTornado = tor;
+            }
+          });
+        }
+
+        // Spiraling into funnel core
+        if (gp.isSucked && gp.targetTornado) {
+          const tor = gp.targetTornado;
+          const dx = tor.x - gp.x;
+          const dy = tor.y - gp.y;
+          const dist = Math.hypot(dx, dy);
+
+          const angle = Math.atan2(dy, dx);
+          const tangent = angle + Math.PI * 0.55;
+          const spiralSpeed = 440 + (tor.isBoss ? 200 : 0);
+
+          gp.vx = Math.cos(angle) * (spiralSpeed * 0.8) + Math.cos(tangent) * (spiralSpeed * 0.6);
+          gp.vy = Math.sin(angle) * (spiralSpeed * 0.8) + Math.sin(tangent) * (spiralSpeed * 0.6);
+          gp.x += gp.vx * dt;
+          gp.y += gp.vy * dt;
+          gp.z = Math.min(32, (gp.z || 0) + 48 * dt);
+
+          // Reached core -> Core Telemetry Detonation!
+          if (dist < 26) {
+            gp.detonated = true;
+            const dmgBonus = 1 + (saveState.lab.overchargeCore || 0) * 0.07 + player.powerCubes * 0.12;
+            const baseDmg = Math.round(spec.bulletDmg * dmgBonus * 1.75);
+
+            tor.hp -= baseDmg;
+            tor.hitFlash = 0.22;
+            tor.stasisTimer = 1.8;
+            tor.stasisSlow = 0.72; // -28% movement speed
+
+            hitStopTimer = 0.055;
+            screenShake = Math.max(screenShake, 16);
+            lightningFlash = 0.65;
+
+            spawnDamageNumber(`⚡ЗАХВАТ ЯДРА -${baseDmg}!`, tor.x, tor.y - 20, '#38bdf8', true);
+            spawnShockwave(tor.x, tor.y, '#38bdf8', 180);
+
+            // Reward: +28% super, 2x chips
+            player.superCharge = Math.min(100, player.superCharge + 28);
+            saveState.telemetryChips = (saveState.telemetryChips || 0) + 2;
+            writeSaveData();
+            syncHUD();
+            showToast('🧬 Получено +2 Чипа телеметрии (Захват Ядра)!');
+            SoundEngine.playCoreDetonation();
+          }
+        }
+      });
+
+      // Tether Chain Bonus: pairs within 240px detonate with +35% Chain Overload
+      for (let i = 0; i < groundProbes.length; i++) {
+        for (let j = i + 1; j < groundProbes.length; j++) {
+          const p1 = groundProbes[i];
+          const p2 = groundProbes[j];
+          if (!p1.isArmed || !p2.isArmed || p1.detonated || p2.detonated || p1.isSucked || p2.isSucked) continue;
+
+          const pDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+          if (pDist <= 240) {
+            tornadoes.forEach((tor) => {
+              if (distToSegment(tor.x, tor.y, p1.x, p1.y, p2.x, p2.y) < tor.coreRadius * 0.95) {
+                p1.detonated = true;
+                p2.detonated = true;
+
+                const dmgBonus = 1 + (saveState.lab.overchargeCore || 0) * 0.07 + player.powerCubes * 0.12;
+                const chainDmg = Math.round(spec.bulletDmg * dmgBonus * 1.75 * 1.35);
+
+                tor.hp -= chainDmg;
+                tor.hitFlash = 0.3;
+                tor.stasisTimer = 2.4;
+                tor.stasisSlow = 0.65;
+
+                hitStopTimer = 0.07;
+                screenShake = Math.max(screenShake, 22);
+                lightningFlash = 0.9;
+
+                spawnDamageNumber(`🔗 ЦЕПНОЙ РАЗРЯД -${chainDmg}!`, tor.x, tor.y - 25, '#fde047', true);
+                spawnShockwave(p1.x, p1.y, '#38bdf8', 140);
+                spawnShockwave(p2.x, p2.y, '#38bdf8', 140);
+
+                player.superCharge = Math.min(100, player.superCharge + 35);
+                saveState.telemetryChips = (saveState.telemetryChips || 0) + 3;
+                writeSaveData();
+                syncHUD();
+                showToast('🔗 ЦЕПНОЙ РАЗРЯД! +3 Чипа телеметрии!');
+                SoundEngine.playSuper('volt');
+              }
+            });
+          }
+        }
+      }
+
+      groundProbes = groundProbes.filter(gp => !gp.detonated);
 
       // Projectiles update
       projectiles.forEach((pr) => {
@@ -4144,6 +4452,125 @@ function draw3DProjectile(pr) {
     // =========================================================================
     // 5-LAYER PARALLAX & ARENA RENDERING PIPELINE
     // =========================================================================
+
+    function drawGroundProbesAndTethers(nowSec) {
+      if (!groundProbes || groundProbes.length === 0) return;
+
+      // 1. Draw glowing 3D Plasma Laser Tether Beams between pairs within 240px
+      for (let i = 0; i < groundProbes.length; i++) {
+        for (let j = i + 1; j < groundProbes.length; j++) {
+          const p1 = groundProbes[i];
+          const p2 = groundProbes[j];
+          if (!p1.isArmed || !p2.isArmed || p1.detonated || p2.detonated) continue;
+
+          const pDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+          if (pDist <= 240) {
+            const pt1 = project3D(p1.x, p1.y, (p1.z || 0) + 12);
+            const pt2 = project3D(p2.x, p2.y, (p2.z || 0) + 12);
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+
+            // Outer glow
+            const pulse = 0.5 + Math.sin(nowSec * 12 + i * 2) * 0.25;
+            ctx.strokeStyle = '#38bdf8';
+            ctx.globalAlpha = Math.max(0.1, pulse);
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(pt1.x, pt1.y);
+            ctx.lineTo(pt2.x, pt2.y);
+            ctx.stroke();
+
+            // Core laser line
+            ctx.strokeStyle = '#ffffff';
+            ctx.globalAlpha = 0.95;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(pt1.x, pt1.y);
+            ctx.lineTo(pt2.x, pt2.y);
+            ctx.stroke();
+
+            ctx.restore();
+          }
+        }
+      }
+
+      // 2. Draw each Ground Probe
+      groundProbes.forEach((gp) => {
+        const gz = gp.z || 0;
+        const pShadow = project3D(gp.x, gp.y, 0);
+        const pBase = project3D(gp.x, gp.y, gz);
+        const pMast = project3D(gp.x, gp.y, gz + 22);
+
+        // Drop shadow
+        drawDropShadow(pShadow.x, pShadow.y, 14, 8, 0.45);
+
+        if (!gp.isArmed) {
+          // Unarmed state: blinking amber warning beacon
+          const blink = (Math.sin(nowSec * 25) > 0);
+          ctx.save();
+          ctx.fillStyle = blink ? '#fbbf24' : '#78350f';
+          ctx.beginPath();
+          ctx.arc(pBase.x, pBase.y, 7 * (pBase.scale || 1), 0, Math.PI * 2);
+          ctx.fill();
+
+          // Arming progress ring
+          const prog = Math.max(0, Math.min(1, 1 - (gp.armTimer / 0.45)));
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(pBase.x, pBase.y, 11 * (pBase.scale || 1), -Math.PI / 2, -Math.PI / 2 + prog * Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        } else {
+          // Armed state: Heavy armored seismic sensor plate + antenna beacon
+          ctx.save();
+          // Base plate (dark steel octagon)
+          ctx.fillStyle = '#0f172a';
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(pBase.x, pBase.y, 9 * (pBase.scale || 1), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Vertical antenna mast
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(pBase.x, pBase.y);
+          ctx.lineTo(pMast.x, pMast.y);
+          ctx.stroke();
+
+          // Top beacon light & glow
+          drawFastGlow(pMast.x, pMast.y, 12 * (pMast.scale || 1), '#38bdf8', 0.85);
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(pMast.x, pMast.y, 3.5 * (pMast.scale || 1), 0, Math.PI * 2);
+          ctx.fill();
+
+          // Rotating radar sweep ring on ground
+          gp.scanAngle = (gp.scanAngle || 0) + 4.5 * 0.016;
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(pBase.x, pBase.y, 24 * (pBase.scale || 1), 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Sweep line
+          const sweepX = pBase.x + Math.cos(gp.scanAngle) * 24 * (pBase.scale || 1);
+          const sweepY = pBase.y + Math.sin(gp.scanAngle) * 24 * (pBase.scale || 1);
+          ctx.beginPath();
+          ctx.moveTo(pBase.x, pBase.y);
+          ctx.lineTo(sweepX, sweepY);
+          ctx.stroke();
+
+          ctx.restore();
+        }
+      });
+    }
+
     function renderGameArena(w, h, nowSec) {
       ctx.fillStyle = '#02050d';
       ctx.fillRect(0, 0, w, h);
@@ -4516,6 +4943,7 @@ function draw3DProjectile(pr) {
       ctx.restore();
 
       projectiles.forEach((pr) => { draw3DProjectile(pr); });
+      drawGroundProbesAndTethers(nowSec);
 
       shockwaves.forEach((sw) => {
         ctx.save();
@@ -4854,6 +5282,55 @@ function draw3DProjectile(pr) {
       if (btnDriveBrawl && btnDriveTank) {
         btnDriveBrawl.className = (curDrive === 'brawl') ? 'p-2 rounded-xl border border-emerald-400 bg-emerald-950/70 text-emerald-200 font-bold text-left shadow-sm' : 'p-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-left';
         btnDriveTank.className = (curDrive === 'tank') ? 'p-2 rounded-xl border border-amber-400 bg-amber-950/70 text-amber-200 font-bold text-left shadow-sm' : 'p-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-left';
+      }
+
+      // Probe Mode (Trap behind vs Shoot forward)
+      const curProbe = (saveState.settings && saveState.settings.probeMode) || 'trap';
+      const lblProbeMode = document.getElementById('lblProbeMode');
+      const iconProbeMode = document.getElementById('iconProbeMode');
+      const btnToggleProbeMode = document.getElementById('btnToggleProbeMode');
+      if (lblProbeMode && iconProbeMode && btnToggleProbeMode) {
+        if (curProbe === 'shoot') {
+          lblProbeMode.textContent = 'ЗАЛП ВПЕРЁД';
+          iconProbeMode.textContent = '🎯';
+          btnToggleProbeMode.className = 'hud-pill px-2.5 py-1 rounded-full text-[11px] font-black text-cyan-300 border border-cyan-400/50 shadow-[0_0_10px_rgba(56,189,248,0.3)] active:scale-95 transition flex items-center gap-1';
+        } else {
+          lblProbeMode.textContent = 'ЛОВУШКА СЗАДИ';
+          iconProbeMode.textContent = '💣';
+          btnToggleProbeMode.className = 'hud-pill px-2.5 py-1 rounded-full text-[11px] font-black text-rose-300 border border-rose-400/50 shadow-[0_0_10px_rgba(244,63,94,0.3)] active:scale-95 transition flex items-center gap-1';
+        }
+      }
+      const btnProbeTrap = document.getElementById('btnProbeTrap');
+      const btnProbeShoot = document.getElementById('btnProbeShoot');
+      if (btnProbeTrap && btnProbeShoot) {
+        btnProbeTrap.className = (curProbe === 'trap') ? 'p-2 rounded-xl border border-rose-400 bg-rose-950/70 text-rose-200 font-bold text-left shadow-sm' : 'p-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-left';
+        btnProbeShoot.className = (curProbe === 'shoot') ? 'p-2 rounded-xl border border-cyan-400 bg-cyan-950/70 text-cyan-200 font-bold text-left shadow-sm' : 'p-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-left';
+      }
+
+      // Left-Handed / Right-Handed Mode
+      const isLeft = Boolean(saveState.settings && saveState.settings.leftHanded);
+      const lblHandedness = document.getElementById('lblHandedness');
+      if (lblHandedness) lblHandedness.textContent = isLeft ? 'ЛЕВША' : 'ПРАВША';
+
+      const gameHudBottom = document.getElementById('gameHudBottom');
+      if (gameHudBottom) {
+        if (isLeft) gameHudBottom.classList.add('flex-row-reverse');
+        else gameHudBottom.classList.remove('flex-row-reverse');
+      }
+
+      const padControlsArea = document.getElementById('padControlsArea');
+      const lblPadHand = document.getElementById('lblPadHand');
+      if (padControlsArea) {
+        if (isLeft) padControlsArea.classList.add('flex-row-reverse');
+        else padControlsArea.classList.remove('flex-row-reverse');
+      }
+      if (lblPadHand) lblPadHand.textContent = isLeft ? 'ЛЕВША' : 'ПРАВША';
+
+      const btnHandRight = document.getElementById('btnHandRight');
+      const btnHandLeft = document.getElementById('btnHandLeft');
+      if (btnHandRight && btnHandLeft) {
+        btnHandRight.className = (!isLeft) ? 'p-2 rounded-xl border border-amber-400 bg-amber-950/70 text-amber-200 font-bold text-left shadow-sm' : 'p-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-left';
+        btnHandLeft.className = (isLeft) ? 'p-2 rounded-xl border border-amber-400 bg-amber-950/70 text-amber-200 font-bold text-left shadow-sm' : 'p-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-left';
       }
     }
 
@@ -5446,7 +5923,6 @@ function draw3DProjectile(pr) {
           this.roomCode = String(Math.floor(1000 + Math.random() * 9000));
         }
 
-        // 1. Setup local BroadcastChannel (instant zero-latency connection between tabs/same browser)
         if (typeof BroadcastChannel !== 'undefined') {
           try {
             if (!this.broadcastChannel) {
@@ -5456,7 +5932,6 @@ function draw3DProjectile(pr) {
           } catch (e) {}
         }
 
-        // 2. Setup WebRTC PeerJS Host
         if (typeof Peer !== 'undefined' && !this.peer) {
           try {
             const hostPeerId = 'storm-stars-pad-' + this.roomCode;
@@ -5513,16 +5988,13 @@ function draw3DProjectile(pr) {
         if (!this.roomCode) return;
         if (pinDisplay) pinDisplay.textContent = this.roomCode;
 
-        let baseUrl = 'https://rasulkaraganda2024.github.io/storm-stars-3d/';
-        if (typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http')) {
-          baseUrl = window.location.href.split('?')[0].split('#')[0];
-        }
+        const baseUrl = (typeof window !== 'undefined' && window.location) ? window.location.href.split('?')[0] : 'https://stormstars.game';
         const padUrl = baseUrl + '?pad=' + this.roomCode;
 
         if (linkInput) linkInput.value = padUrl;
         if (openTabBtn) openTabBtn.href = padUrl;
         if (qrImage) {
-          qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=6&data=' + encodeURIComponent(padUrl);
+          qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(padUrl);
         }
       },
 
@@ -5563,7 +6035,8 @@ function draw3DProjectile(pr) {
             virtualJoystick.dx = Math.max(-1, Math.min(1, virtualJoystick.dx + pkt.gyroSteer));
           }
 
-          // Buttons
+          // Action Triggers: Both Trap and Shoot
+          if (pkt.trap) deployGroundProbeBehindCar();
           if (pkt.shoot) fireMainAttackProbe();
           if (pkt.turbo) activateGadgetTurbo();
           if (pkt.superBtn) activateSuperAbility();
@@ -5614,7 +6087,6 @@ function draw3DProjectile(pr) {
         this.isControllerMode = true;
         this.roomCode = String(code).trim();
 
-        // Hide regular game shell (controller UI is now outside .app-shell!)
         const appShell = document.querySelector('.app-shell');
         if (appShell) appShell.style.display = 'none';
 
@@ -5623,10 +6095,10 @@ function draw3DProjectile(pr) {
           ctrlUI.classList.remove('hidden');
           ctrlUI.style.display = 'flex';
         }
-        const roomLbl = document.getElementById('padRoomCodeLabel');
-        if (roomLbl) roomLbl.textContent = 'КОД: ' + this.roomCode;
 
-        // BroadcastChannel bridge
+        // Apply Left-Handed mode preference on Phone Controller
+        this.applyHandednessUI();
+
         if (typeof BroadcastChannel !== 'undefined') {
           try {
             this.broadcastChannel = new BroadcastChannel('storm-stars-pad-' + this.roomCode);
@@ -5635,55 +6107,50 @@ function draw3DProjectile(pr) {
           } catch (e) {}
         }
 
-        // WebRTC Client via PeerJS (with retry if PeerJS CDN is still loading)
-        const connectPeerJS = () => {
-          if (typeof Peer === 'undefined') {
-            setTimeout(connectPeerJS, 300);
-            return;
-          }
+        if (typeof Peer !== 'undefined') {
           try {
             const clientPeer = new Peer({ debug: 0 });
             clientPeer.on('open', () => {
-              const attemptConnect = () => {
-                if (this.activeConn && this.activeConn.open) return;
-                const conn = clientPeer.connect('storm-stars-pad-' + this.roomCode, { reliable: true });
-                conn.on('open', () => {
-                  this.activeConn = conn;
-                  conn.send({ type: 'hello', t: Date.now() });
-                  this.updateControllerStatus(true);
-                  if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([40, 60, 40]);
-                });
-                conn.on('data', (data) => this.handleControllerIncoming(data));
-                conn.on('close', () => {
-                  this.activeConn = null;
-                  this.updateControllerStatus(false);
-                  setTimeout(attemptConnect, 2000);
-                });
-                conn.on('error', () => {
-                  this.activeConn = null;
-                  this.updateControllerStatus(false);
-                });
-              };
-              attemptConnect();
+              const conn = clientPeer.connect('storm-stars-pad-' + this.roomCode, { reliable: true });
+              conn.on('open', () => {
+                this.activeConn = conn;
+                conn.send({ type: 'hello', t: Date.now() });
+                this.updateControllerStatus(true);
+              });
+              conn.on('data', (data) => this.handleControllerIncoming(data));
+              conn.on('close', () => this.updateControllerStatus(false));
+              conn.on('error', () => this.updateControllerStatus(false));
             });
           } catch (e) {
             console.warn('PeerJS Client init error:', e);
           }
-        };
-        connectPeerJS();
+        }
 
         this.setupControllerTouchEvents();
 
-        // 60Hz input transmission
         setInterval(() => {
           this.sendControllerInput();
         }, 16);
+      },
+
+      applyHandednessUI() {
+        const isLeft = (saveState && saveState.settings && saveState.settings.leftHanded);
+        const padArea = document.getElementById('padControlsArea');
+        const lblHand = document.getElementById('lblPadHand');
+        if (padArea) {
+          if (isLeft) padArea.classList.add('flex-row-reverse');
+          else padArea.classList.remove('flex-row-reverse');
+        }
+        if (lblHand) {
+          lblHand.textContent = isLeft ? 'ЛЕВША' : 'ПРАВША';
+        }
       },
 
       controllerState: {
         jx: 0,
         jy: 0,
         shoot: false,
+        trap: false,
         turbo: false,
         superBtn: false,
         gyroEnabled: false,
@@ -5697,10 +6164,10 @@ function draw3DProjectile(pr) {
         const dot = document.getElementById('padConnDot');
         const lbl = document.getElementById('padConnStatusLabel');
         if (dot) {
-          dot.className = connected ? 'w-3 h-3 rounded-full bg-emerald-400 animate-pulse' : 'w-3 h-3 rounded-full bg-amber-400 animate-pulse';
+          dot.className = connected ? 'w-3 h-3 rounded-full bg-emerald-400 animate-pulse' : 'w-3 h-3 rounded-full bg-rose-500';
         }
         if (lbl) {
-          lbl.textContent = connected ? '🟢 ПК подключён' : 'Поиск ПК...';
+          lbl.textContent = connected ? 'ПК Подключён!' : 'Поиск ПК...';
           lbl.className = connected ? 'text-[11px] font-bold text-emerald-300' : 'text-[11px] font-bold text-amber-300';
         }
       },
@@ -5781,12 +6248,22 @@ function draw3DProjectile(pr) {
         const thumb = document.getElementById('padStickThumb');
 
         if (area && thumb) {
+          // Floating Center Touch: smooth immediate response without dead-zone lag
           const onTouchStart = (e) => {
             e.preventDefault();
             const t = e.changedTouches ? e.changedTouches[0] : e;
             const rect = area.getBoundingClientRect();
-            this.controllerState.centerX = rect.left + rect.width / 2;
-            this.controllerState.centerY = rect.top + rect.height / 2;
+            const wheelCenterX = rect.left + rect.width / 2;
+            const wheelCenterY = rect.top + rect.height / 2;
+            const distFromCenter = Math.hypot(t.clientX - wheelCenterX, t.clientY - wheelCenterY);
+
+            if (distFromCenter < rect.width * 0.75) {
+              this.controllerState.centerX = wheelCenterX;
+              this.controllerState.centerY = wheelCenterY;
+            } else {
+              this.controllerState.centerX = t.clientX;
+              this.controllerState.centerY = t.clientY;
+            }
             this.controllerState.touchId = (t.identifier !== undefined) ? t.identifier : 1;
             updateStick(t.clientX, t.clientY);
             if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(15);
@@ -5815,7 +6292,7 @@ function draw3DProjectile(pr) {
           const updateStick = (cx, cy) => {
             const dx = cx - this.controllerState.centerX;
             const dy = cy - this.controllerState.centerY;
-            const maxR = (area.clientWidth * 0.45) || 55;
+            const maxR = (area.clientWidth * 0.45) || 60;
             const dist = Math.hypot(dx, dy);
             const clampedDist = Math.min(dist, maxR);
             const angle = Math.atan2(dy, dx);
@@ -5849,6 +6326,7 @@ function draw3DProjectile(pr) {
           });
         }
 
+        // 4 Action Buttons
         const bindBtn = (id, field, vibrateMs) => {
           const btn = document.getElementById(id);
           if (!btn) return;
@@ -5869,10 +6347,12 @@ function draw3DProjectile(pr) {
           btn.addEventListener('mouseleave', release);
         };
 
+        bindBtn('btnPadTrap', 'trap', 35);
         bindBtn('btnPadShoot', 'shoot', 25);
         bindBtn('btnPadTurbo', 'turbo', 40);
         bindBtn('btnPadSuper', 'superBtn', 60);
 
+        // Gyro Toggle on Phone
         const btnGyro = document.getElementById('btnPadGyroToggle');
         const lblGyro = document.getElementById('lblPadGyro');
         if (btnGyro && lblGyro) {
@@ -5894,6 +6374,16 @@ function draw3DProjectile(pr) {
           });
         }
 
+        // 1-Tap Handedness Swap on Phone
+        const btnHand = document.getElementById('btnPadHandToggle');
+        if (btnHand) {
+          btnHand.addEventListener('click', () => {
+            saveState.settings.leftHanded = !saveState.settings.leftHanded;
+            this.applyHandednessUI();
+            writeSaveData();
+          });
+        }
+
         const btnDisc = document.getElementById('btnPadDisconnect');
         if (btnDisc) {
           btnDisc.addEventListener('click', () => {
@@ -5910,6 +6400,7 @@ function draw3DProjectile(pr) {
           type: 'input',
           jx: this.controllerState.jx,
           jy: this.controllerState.jy,
+          trap: this.controllerState.trap,
           shoot: this.controllerState.shoot,
           turbo: this.controllerState.turbo,
           superBtn: this.controllerState.superBtn,
@@ -5926,7 +6417,6 @@ function draw3DProjectile(pr) {
       }
     };
 
-    // Quick-Toggle functions for Keyboard Layout & Steering Drive Mode
     function cycleKeyScheme() {
       const current = (saveState.settings && saveState.settings.keyScheme) || 'both';
       let next = 'both';
@@ -5955,6 +6445,23 @@ function draw3DProjectile(pr) {
       syncHUD();
 
       showToast(`🕹️ Режим вождения: ${next === 'brawl' ? 'BRAWL-DIRECT (8 направлений)' : 'ТАНК / АВТО-ДРИФТ'}`);
+    }
+
+    
+    function toggleProbeMode() {
+      const current = (saveState.settings && saveState.settings.probeMode) || 'trap';
+      const next = (current === 'trap') ? 'shoot' : 'trap';
+      saveState.settings.probeMode = next;
+      writeSaveData();
+      syncHUD();
+      showToast(next === 'trap' ? '💣 Режим датчиков: Ловушка позади (Пробел)' : '🎯 Режим датчиков: Залп вперёд (Пробел)');
+    }
+
+    function toggleHandedness() {
+      saveState.settings.leftHanded = !saveState.settings.leftHanded;
+      writeSaveData();
+      syncHUD();
+      showToast(saveState.settings.leftHanded ? '🤚 Раскладка: ЛЕВША (Кнопки слева)' : '🤚 Раскладка: ПРАВША (Руль слева)');
     }
 
     function openGamepadModal() {
@@ -6047,6 +6554,58 @@ function draw3DProjectile(pr) {
           showToast('🚗 Режим вождения: ТАНК / АВТО-ДРИФТ');
         });
       }
+
+      // Probe Mode & Handedness Toggles
+      const btnToggleProbeMode = document.getElementById('btnToggleProbeMode');
+      if (btnToggleProbeMode) btnToggleProbeMode.addEventListener('click', toggleProbeMode);
+
+      const btnToggleHandedness = document.getElementById('btnToggleHandedness');
+      if (btnToggleHandedness) btnToggleHandedness.addEventListener('click', toggleHandedness);
+
+      const btnProbeTrap = document.getElementById('btnProbeTrap');
+      if (btnProbeTrap) {
+        btnProbeTrap.addEventListener('click', () => {
+          saveState.settings.probeMode = 'trap';
+          writeSaveData();
+          syncHUD();
+          showToast('💣 Режим: Ловушка позади');
+        });
+      }
+      const btnProbeShoot = document.getElementById('btnProbeShoot');
+      if (btnProbeShoot) {
+        btnProbeShoot.addEventListener('click', () => {
+          saveState.settings.probeMode = 'shoot';
+          writeSaveData();
+          syncHUD();
+          showToast('🎯 Режим: Залп вперёд');
+        });
+      }
+
+      const btnHandRight = document.getElementById('btnHandRight');
+      if (btnHandRight) {
+        btnHandRight.addEventListener('click', () => {
+          saveState.settings.leftHanded = false;
+          writeSaveData();
+          syncHUD();
+          showToast('👉 Раскладка: Правша');
+        });
+      }
+      const btnHandLeft = document.getElementById('btnHandLeft');
+      if (btnHandLeft) {
+        btnHandLeft.addEventListener('click', () => {
+          saveState.settings.leftHanded = true;
+          writeSaveData();
+          syncHUD();
+          showToast('👈 Раскладка: Левша');
+        });
+      }
+
+      // Bottom HUD 4 Action Buttons
+      const btnDeployTrap = document.getElementById('btnDeployTrap');
+      if (btnDeployTrap) btnDeployTrap.addEventListener('click', () => deployGroundProbeBehindCar());
+
+      const btnFireForward = document.getElementById('btnFireForward');
+      if (btnFireForward) btnFireForward.addEventListener('click', () => fireMainAttackProbe());
 
       // Wireless Gamepad Modal Toggles
       const btnOpenGamepad = document.getElementById('btnOpenGamepad');
