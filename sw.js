@@ -1,4 +1,4 @@
-const CACHE_NAME = 'storm-stars-3d-v4.0';
+const CACHE_NAME = 'storm-stars-3d-v4.1';
 const ASSETS = [
   './',
   './index.html',
@@ -26,8 +26,10 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((res) => {
-        const clone = res.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        if (res && res.ok && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
         return res;
       })
       .catch(() => caches.match(event.request).then((cached) => cached || caches.match('./index.html')))

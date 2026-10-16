@@ -927,10 +927,16 @@
               🎓 ФАЗА KI: Знакомство
             </span>
           </div>
-          <button id="btnVoiceToggle" type="button" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700 hover:border-cyan-400 transition flex items-center gap-1.5 shrink-0">
-            <span id="lblVoiceIcon">🔊</span>
-            <span id="lblVoiceText">Озвучка: ВКЛ</span>
-          </button>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button id="btnReplayVoice" type="button" title="Повторить радио-брифинг" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-cyan-900 text-xs font-bold text-cyan-300 border border-slate-700 hover:border-cyan-400 transition flex items-center gap-1">
+              <span>📻</span>
+              <span class="hidden sm:inline">Рация</span>
+            </button>
+            <button id="btnVoiceToggle" type="button" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700 hover:border-cyan-400 transition flex items-center gap-1.5">
+              <span id="lblVoiceIcon">🔊</span>
+              <span id="lblVoiceText">Озвучка: ВКЛ</span>
+            </button>
+          </div>
         </div>
 
         <!-- Main Mission Card -->
@@ -2651,12 +2657,19 @@ const SoundEngine = {
     if (typeof saveState !== 'undefined' && saveState.settings && saveState.settings.voiceBriefing === false) return;
     try {
       window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'ru-RU';
-      utter.rate = 1.12;
-      utter.pitch = 0.95;
-      utter.volume = (this.soundMode === 'mute') ? 0 : 0.95;
-      window.speechSynthesis.speak(utter);
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+      setTimeout(() => {
+        try {
+          const utter = new SpeechSynthesisUtterance(text);
+          utter.lang = 'ru-RU';
+          utter.rate = 1.12;
+          utter.pitch = 0.95;
+          utter.volume = (this.soundMode === 'mute') ? 0 : 0.95;
+          window.speechSynthesis.speak(utter);
+        } catch (e) {}
+      }, 60);
     } catch (e) {}
   },
 
@@ -3808,8 +3821,10 @@ function draw3DProjectile(pr) {
 
     function resetPlayerCar() {
       const spec = getSelectedCarSpec();
+      const carData = (saveState.cars && saveState.cars[spec.id]) || { level: 1 };
+      const carLvlBonus = 1 + ((carData.level || 1) - 1) * 0.12;
       const labHpBonus = 1 + (saveState.lab.empArmor || 0) * 0.08;
-      const maxHp = Math.round(spec.maxHp * labHpBonus);
+      const maxHp = Math.round(spec.maxHp * labHpBonus * carLvlBonus);
 
       player = {
         x: ARENA_W * 0.5,
@@ -3968,10 +3983,7 @@ function draw3DProjectile(pr) {
         tornadoes[1].isTwin = true;
       }
 
-      // Hades-Style Tactical Run Perk Offering on Even Levels (2, 4, 6, 8, 10...)
-      if (currentConfig.level >= 2 && currentConfig.level % 2 === 0) {
-        showPerkSelectionOverlay();
-      }
+      // Hades-Style Tactical Run Perk Offering on Even Levels handled exclusively in #levelBriefingModal
 
       // Spawn Volcanoes
       for (let i = 0; i < currentConfig.volcanoCount; i++) {
@@ -4099,6 +4111,7 @@ function draw3DProjectile(pr) {
     let isBriefingActive = false;
     let briefingTimer = 15.0;
     let briefingOpenedAt = 0;
+    let inputLockUntil = 0;
 
     function getLevelBriefingData(lvl) {
       const cfg = generateLevelConfig(lvl);
@@ -4252,6 +4265,11 @@ function draw3DProjectile(pr) {
       briefingTimer = 15.0;
       briefingOpenedAt = performance.now();
 
+      // Stop engine/wind loops during briefing for crisp voiceover
+      if (typeof SoundEngine !== 'undefined' && SoundEngine.stopLoops) {
+        SoundEngine.stopLoops();
+      }
+
       const data = getLevelBriefingData(lvl);
       const modal = document.getElementById('levelBriefingModal');
       if (!modal) return;
@@ -4280,10 +4298,11 @@ function draw3DProjectile(pr) {
         formulaEl.textContent = data.formula;
       }
 
-      // Hades Tactical Perks on even levels
+      // Hades Tactical Perks on even levels: Default to 'round' if unselected
       const perksCont = document.getElementById('briefingPerksContainer');
       if (perksCont) {
         if (lvl % 2 === 0) {
+          if (!activeRunPerk) selectRunPerk('round');
           perksCont.classList.remove('hidden');
           updateBriefingPerkUI(activeRunPerk);
         } else {
@@ -4318,8 +4337,15 @@ function draw3DProjectile(pr) {
 
     function dismissLevelBriefing() {
       if (!isBriefingActive) return;
+
+      // Auto-grant first perk if player never selected one on even level
+      if (saveState.currentLevel % 2 === 0 && !activeRunPerk) {
+        selectRunPerk('round');
+      }
+
       isBriefingActive = false;
       isGamePaused = false;
+      inputLockUntil = performance.now() + 260; // 260ms input lock to prevent tap leak
 
       const modal = document.getElementById('levelBriefingModal');
       if (modal) modal.classList.add('hidden');
@@ -4508,8 +4534,28 @@ function draw3DProjectile(pr) {
       // Exact Match: ⚡ ИДЕАЛЬНЫЙ РЕЗОНАНС!
       if (tor.mathCurrent === tor.mathTarget) {
         tor.graceCorrectionTimer = 0;
-        const resDmg = Math.round(Math.max(baseDmg * 3.0, tor.maxHp * 0.45));
-        tor.hp -= resDmg;
+        let resDmg;
+
+        // Level 1 Tutorial: 100% Instant One-Shot Kill!
+        if (currentConfig && currentConfig.level === 1) {
+          resDmg = tor.hp;
+          tor.hp = 0;
+        } else if (tor.bossPhase && tor.bossMaxPhases) {
+          // Boss: exactly 35% of maxHp per phase!
+          resDmg = Math.round(tor.maxHp * 0.35);
+          tor.hp -= resDmg;
+          const phaseFloor = Math.round(tor.maxHp * Math.max(0, 1 - tor.bossPhase * 0.35));
+          if (tor.bossPhase < tor.bossMaxPhases && tor.hp < phaseFloor) {
+            tor.hp = phaseFloor;
+          } else if (tor.bossPhase >= tor.bossMaxPhases) {
+            tor.hp = 0; // Final 3rd phase kills the Boss!
+          }
+        } else {
+          // Standard Tornadoes: 55% maxHp or 2.8x base damage!
+          resDmg = Math.round(Math.max(baseDmg * 2.8, tor.maxHp * 0.55));
+          tor.hp -= resDmg;
+        }
+
         tor.hitFlash = 0.45;
         tor.stasisTimer = 2.2;
         tor.stasisSlow = 0.15;
@@ -4721,7 +4767,9 @@ function draw3DProjectile(pr) {
       player.ammo -= 1.0;
 
       const spec = getSelectedCarSpec();
-      const dmgBonus = 1 + (saveState.lab.overchargeCore || 0) * 0.07 + player.powerCubes * 0.12;
+      const carData = (saveState.cars && saveState.cars[spec.id]) || { level: 1 };
+      const carLvlBonus = 1 + ((carData.level || 1) - 1) * 0.12;
+      const dmgBonus = (1 + (saveState.lab.overchargeCore || 0) * 0.07 + player.powerCubes * 0.12) * carLvlBonus;
       const baseDmg = Math.round(spec.bulletDmg * dmgBonus);
 
       // Brawl Stars Auto-Aim: if mouse is not held, automatically target the nearest tornado!
@@ -4834,6 +4882,9 @@ function draw3DProjectile(pr) {
 
     // Gadget Turbo Boost
     function activateGadgetTurbo() {
+      const spec = getSelectedCarSpec();
+      const carData = (saveState.cars && saveState.cars[spec.id]) || { level: 1 };
+      const carLvlBonus = 1 + ((carData.level || 1) - 1) * 0.12;
       player.boostTimer = Math.max(player.boostTimer, 1.4);
       SoundEngine.playJetstreamPad();
 
@@ -5039,7 +5090,7 @@ function draw3DProjectile(pr) {
       if (e.code === 'Space' || e.key === ' ') {
         keys[' '] = true;
         keys['space'] = true;
-        if (appMode === 'game' && !isGamePaused) {
+        if (appMode === 'game' && !isGamePaused && performance.now() >= inputLockUntil) {
           if ((saveState.settings && saveState.settings.probeMode) === 'shoot') {
             fireMainAttackProbe();
           } else {
@@ -5093,8 +5144,8 @@ function draw3DProjectile(pr) {
       const screenY = e.clientY - rect.top;
 
       const zoom = cam.scale || 1;
-      const cx = canvas.width * 0.5;
-      const cy = canvas.height * 0.5;
+      const cx = rect.width * 0.5;
+      const cy = rect.height * 0.5;
 
       mouseWorld.x = (screenX - cx) / zoom + cam.x;
       mouseWorld.y = (screenY - cy) / zoom + cam.y;
@@ -5107,7 +5158,7 @@ function draw3DProjectile(pr) {
 
     canvas.addEventListener('pointerdown', (e) => {
       SoundEngine.ensureContext();
-      if (appMode !== 'game' || isGamePaused) return;
+      if (appMode !== 'game' || isGamePaused || performance.now() < inputLockUntil) return;
       // On touch devices, mobile buttons handle firing to avoid interfering with joystick
       if (e.pointerType === 'touch') return;
       if (e.pointerType === 'mouse') {
@@ -5625,6 +5676,9 @@ function draw3DProjectile(pr) {
       tornadoTrails.forEach((tr) => { tr.life -= dt; });
       tornadoTrails = tornadoTrails.filter(tr => tr.life > 0);
 
+      hazardStrikes.forEach((hs) => { hs.life -= dt; });
+      hazardStrikes = hazardStrikes.filter(hs => hs.life > 0);
+
       // Ground Probes & Tether Traps Update
       groundProbes.forEach((gp) => {
         if (!gp.isArmed) {
@@ -5697,7 +5751,17 @@ function draw3DProjectile(pr) {
             const res = applyMathResonance(tor, 'trap', baseDmg);
             if (res.isOvershoot) baseDmg = Math.round(baseDmg * res.dmgMultiplier);
 
-            tor.hp -= baseDmg;
+            // While frequency shield is active, non-resonance hits deal 15% chip damage
+            if (!res.isExact) {
+              const chipDmg = Math.round(baseDmg * 0.15);
+              tor.hp -= chipDmg;
+              if (tor.bossPhase && tor.bossPhase < tor.bossMaxPhases) {
+                const phaseFloor = Math.round(tor.maxHp * (1 - (tor.bossPhase - 1) * 0.35));
+                if (tor.hp < phaseFloor) tor.hp = phaseFloor;
+              }
+              spawnDamageNumber(`-${chipDmg} (щит 85%)`, tor.x, tor.y - 20, '#94a3b8');
+            }
+
             tor.hitFlash = 0.22;
             tor.stasisTimer = 1.8;
             tor.stasisSlow = 0.72; // -28% movement speed
@@ -5990,6 +6054,31 @@ function draw3DProjectile(pr) {
           }
         });
 
+        // Radar Tower Ricochet (+4 Гц on ricochet)
+        radarTowers.forEach((tw) => {
+          if (pr.life > 0) {
+            const dTower = Math.hypot(tw.x - pr.x, tw.y - pr.y);
+            const twRadius = 26;
+            if (dTower < twRadius + pr.r + 4) {
+              const nx = (pr.x - tw.x) / (dTower || 1);
+              const ny = (pr.y - tw.y) / (dTower || 1);
+              const dot = pr.vx * nx + pr.vy * ny;
+              if (dot < 0) {
+                pr.vx = pr.vx - 2 * dot * nx;
+                pr.vy = pr.vy - 2 * dot * ny;
+                pr.bounces = (pr.bounces || 0) + 1;
+                pr.x = tw.x + nx * (twRadius + pr.r + 5);
+                pr.y = tw.y + ny * (twRadius + pr.r + 5);
+                spawnShockwave(pr.x, pr.y, '#38bdf8', 40);
+                spawnDamageNumber(`📐 РИКОШЕТ ОТ РАДАРА +4 Гц!`, pr.x, pr.y - 20, '#38bdf8', true, 15);
+                if (typeof SoundEngine !== 'undefined' && SoundEngine.playImpact) {
+                  SoundEngine.playImpact('metal', 0.9, tw.x, tw.y);
+                }
+              }
+            }
+          }
+        });
+
         // Geometric Boulder Ricochet
         fallingRocks.forEach((rk) => {
           if (pr.life > 0) {
@@ -6007,7 +6096,7 @@ function draw3DProjectile(pr) {
                 pr.y = rk.y + ny * (rkRadius + pr.r + 5);
                 spawnShockwave(pr.x, pr.y, '#38bdf8', 35);
                 if (typeof SoundEngine !== 'undefined' && SoundEngine.playImpact) {
-                  SoundEngine.playImpact(rk.x, rk.y);
+                  SoundEngine.playImpact('rock', 0.85, rk.x, rk.y);
                 }
               }
             }
@@ -6037,15 +6126,23 @@ function draw3DProjectile(pr) {
             const res = applyMathResonance(tor, opType, dmg);
             if (res.isOvershoot) dmg = Math.round(dmg * res.dmgMultiplier);
 
-            tor.hp -= dmg;
+            // While frequency shield is active, non-resonance hits deal 15% chip damage
+            if (!res.isExact) {
+              const chipDmg = Math.round(dmg * 0.15);
+              tor.hp -= chipDmg;
+              if (tor.bossPhase && tor.bossPhase < tor.bossMaxPhases) {
+                const phaseFloor = Math.round(tor.maxHp * (1 - (tor.bossPhase - 1) * 0.35));
+                if (tor.hp < phaseFloor) tor.hp = phaseFloor;
+              }
+              spawnDamageNumber(isCrit ? `-${chipDmg} КРИТ! (щит 85%)` : `-${chipDmg} (щит 85%)`, pr.x, pr.y - 12, isCrit ? '#fde047' : '#94a3b8', isCrit);
+            }
+
             tor.hitFlash = 0.12;
 
             if (isCrit) {
               hitStopTimer = 0.045;
               screenShake = Math.max(screenShake, 10);
             }
-
-            spawnDamageNumber(isCrit ? `-${dmg} КРИТ!` : `-${dmg}`, pr.x, pr.y - 12, isCrit ? '#fde047' : '#ffffff', isCrit);
 
             player.superCharge = Math.min(100, player.superCharge + (isCrit ? 16 : 8));
             if (player.superCharge >= 100 && !player.isSuperReady) {
@@ -6097,7 +6194,7 @@ function draw3DProjectile(pr) {
         pk.pulse += dt * 4;
 
         const d = Math.hypot(player.x - pk.x, player.y - pk.y);
-        if (d < magnetRadius) {
+        if (d < magnetRadius && d > 0.001) {
           const pullSpeed = 460;
           pk.vx += ((player.x - pk.x) / d) * pullSpeed * dt;
           pk.vy += ((player.y - pk.y) / d) * pullSpeed * dt;
@@ -6124,6 +6221,62 @@ function draw3DProjectile(pr) {
         }
       });
       pickups = pickups.filter(pk => pk.life > 0);
+
+      // Radar Towers: physical collision with player car
+      radarTowers.forEach((tw) => {
+        const d = Math.hypot(player.x - tw.x, player.y - tw.y);
+        const towerR = 26;
+        if (d < towerR + 20 && d > 0.001) {
+          const angle = Math.atan2(player.y - tw.y, player.x - tw.x);
+          player.vx = Math.cos(angle) * 480;
+          player.vy = Math.sin(angle) * 480;
+          player.zBounce = 5;
+          SoundEngine.playImpact('metal', 1.1, tw.x, tw.y);
+          spawnShockwave(tw.x, tw.y, '#38bdf8', 60);
+        }
+      });
+
+      // Volcanoes Eruption & Thermal Blast
+      volcanoes.forEach((v) => {
+        v.pulse = (v.pulse || 0) + dt * 2.5;
+        if (v.eruptTimer === undefined) v.eruptTimer = 5.0 + Math.random() * 3.0;
+        v.eruptTimer -= dt;
+        if (v.eruptTimer <= 0) {
+          v.eruptTimer = 6.0 + Math.random() * 2.5;
+          spawnShockwave(v.x, v.y, '#f97316', 150);
+          spawnShockwave(v.x, v.y, '#fde047', 90);
+          if (typeof SoundEngine !== 'undefined' && SoundEngine.playThunder) {
+            SoundEngine.playThunder(0.85, v.x, v.y);
+          }
+          // Blast nearby player
+          const blastR = v.baseR * 2.6;
+          const dp = Math.hypot(player.x - v.x, player.y - v.y);
+          if (dp < blastR && dp > 0.001) {
+            const pAngle = Math.atan2(player.y - v.y, player.x - v.x);
+            player.vx += Math.cos(pAngle) * 450;
+            player.vy += Math.sin(pAngle) * 450;
+            player.zBounce = 8;
+            screenShake = Math.max(screenShake, 12);
+          }
+          // Thermal frequency shift (+1 Гц) to nearby tornadoes
+          tornadoes.forEach((tor) => {
+            if (tor.hp > 0 && tor.mathTarget !== undefined) {
+              const dtTor = Math.hypot(tor.x - v.x, tor.y - v.y);
+              if (dtTor < blastR && dtTor > 0.001) {
+                const tAngle = Math.atan2(tor.y - v.y, tor.x - v.x);
+                tor.vx += Math.cos(tAngle) * 220;
+                tor.vy += Math.sin(tAngle) * 220;
+                tor.mathCurrent = (tor.mathCurrent || 0) + 1;
+                tor.mathDecayTimer = 6.5;
+                spawnDamageNumber(`🌋 ТЕРМО-СДВИГ +1 Гц! ${tor.mathCurrent}/${tor.mathTarget}`, tor.x, tor.y - 36, '#f97316', true, 16);
+                if (tor.mathCurrent === tor.mathTarget) {
+                  applyMathResonance(tor, 'saved_resonance', spec.bulletDmg * 2.0);
+                }
+              }
+            }
+          });
+        }
+      });
 
       // Bumpers
       bumpers.forEach((b) => {
@@ -6725,6 +6878,9 @@ function draw3DProjectile(pr) {
         }
       });
 
+      // Ground Probes & Tethers drawn on ground surface BEFORE player car chassis
+      drawGroundProbesAndTethers(nowSec);
+
       tornadoes.forEach((tor) => { draw3DTornadoColumn(tor, nowSec); });
 
       drawDropShadow(player.x, player.y + 6, 28, 18, 0.52, player.angle);
@@ -6776,7 +6932,6 @@ function draw3DProjectile(pr) {
       ctx.restore();
 
       projectiles.forEach((pr) => { draw3DProjectile(pr); });
-      drawGroundProbesAndTethers(nowSec);
 
       shockwaves.forEach((sw) => {
         ctx.save();
@@ -7413,6 +7568,9 @@ function draw3DProjectile(pr) {
 
     // 4-Tab Garage Navigation & Modal Renderer
     function openGarage(tab = 'cars') {
+      if (typeof SoundEngine !== 'undefined' && SoundEngine.stopLoops) {
+        SoundEngine.stopLoops();
+      }
       renderGarageModal();
       document.getElementById('garageModal')?.classList.remove('hidden');
 
@@ -7824,6 +7982,12 @@ function draw3DProjectile(pr) {
     // Pre-Level Tactical Briefing Listeners
     document.getElementById('btnDismissBriefing')?.addEventListener('click', () => dismissLevelBriefing());
     document.getElementById('btnVoiceToggle')?.addEventListener('click', () => toggleVoiceBriefing());
+    document.getElementById('btnReplayVoice')?.addEventListener('click', () => {
+      const data = getLevelBriefingData(saveState.currentLevel);
+      if (typeof SoundEngine !== 'undefined' && SoundEngine.speakBriefing) {
+        SoundEngine.speakBriefing(data.speech);
+      }
+    });
     document.getElementById('btnBriefingPerk1')?.addEventListener('click', () => {
       selectRunPerk('round');
       updateBriefingPerkUI('round');
@@ -7846,8 +8010,8 @@ function draw3DProjectile(pr) {
     // Victory & Defeat Modal Buttons
     document.getElementById('btnVicNextLvl')?.addEventListener('click', () => {
       document.getElementById('victoryModal')?.classList.add('hidden');
-      if (saveState.currentLevel < 100) setupLevel(saveState.currentLevel + 1);
-      else setupLevel(100);
+      inputLockUntil = performance.now() + 260;
+      setupLevel(saveState.currentLevel);
     });
     document.getElementById('btnVicToGarage')?.addEventListener('click', () => {
       document.getElementById('victoryModal')?.classList.add('hidden');
@@ -8113,7 +8277,10 @@ function draw3DProjectile(pr) {
             if (pkt.superBtn) {
               if (handleModalGamepadAction('garage')) return;
             }
+            return; // Never fall through to combat actions while paused!
           }
+
+          if (performance.now() < inputLockUntil) return;
 
           if (pkt.trap) deployGroundProbeBehindCar();
           if (pkt.shoot) fireMainAttackProbe();
@@ -8149,7 +8316,8 @@ function draw3DProjectile(pr) {
         const data = {
           type: 'telemetry',
           hp: Math.max(0, Math.round(player.hp)),
-          maxHp: spec.hp,
+          maxHp: player.maxHp || spec.maxHp || 4400,
+          paused: isGamePaused,
           ammo: Math.floor(player.ammo),
           ammoFrac: player.ammo,
           superPct: Math.round(player.superCharge),
@@ -8780,25 +8948,29 @@ function draw3DProjectile(pr) {
 
       // Trap (Bottom A) - Auto-repeat while held or advance modal
       setupHoldButton('btnDeckTrap', () => {
-        if (isGamePaused && handleModalGamepadAction('confirm')) return;
+        if (isGamePaused) { handleModalGamepadAction('confirm'); return; }
+        if (performance.now() < inputLockUntil) return;
         deployGroundProbeBehindCar();
       }, 160, 25);
 
       // Shoot (Left X) - Auto-repeat while held or advance modal
       setupHoldButton('btnDeckShoot', () => {
-        if (isGamePaused && handleModalGamepadAction('confirm')) return;
+        if (isGamePaused) { handleModalGamepadAction('confirm'); return; }
+        if (performance.now() < inputLockUntil) return;
         fireMainAttackProbe();
       }, 160, 20);
 
       // Turbo (Right B) - Single boost per tap or advance modal
       setupHoldButton('btnDeckTurbo', () => {
-        if (isGamePaused && handleModalGamepadAction('confirm')) return;
+        if (isGamePaused) { handleModalGamepadAction('confirm'); return; }
+        if (performance.now() < inputLockUntil) return;
         activateGadgetTurbo();
       }, 0, 30);
 
       // Super (Top Y) - Single trigger per tap or open garage in modal
       setupHoldButton('btnDeckSuper', () => {
-        if (isGamePaused && handleModalGamepadAction('garage')) return;
+        if (isGamePaused) { handleModalGamepadAction('garage'); return; }
+        if (performance.now() < inputLockUntil) return;
         activateSuperAbility();
       }, 0, 40);
     }
