@@ -912,6 +912,122 @@
     </div>
 
     <!-- =================================================================== -->
+    <!-- PRE-LEVEL 15-SECOND TACTICAL BRIEFING MODAL                         -->
+    <!-- =================================================================== -->
+    <div id="levelBriefingModal" class="hidden absolute inset-0 z-45 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 text-white">
+      <div class="max-w-xl w-full bg-slate-900/95 border-2 border-cyan-400/80 rounded-3xl p-4 sm:p-5 shadow-[0_0_50px_rgba(34,211,238,0.25)] flex flex-col gap-3 sm:gap-3.5">
+        
+        <!-- Header: Level Badge, Kishotenketsu Phase Pill, Voice Briefing Toggle -->
+        <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="briefingLevelBadge" class="px-2.5 py-0.5 rounded-lg bg-cyan-950 text-cyan-300 font-black text-xs sm:text-sm border border-cyan-500/40 tracking-wider">
+              УРОВЕНЬ 1 / 100
+            </span>
+            <span id="briefingPhasePill" class="px-2.5 py-0.5 rounded-lg text-xs font-black tracking-wide border">
+              🎓 ФАЗА KI: Знакомство
+            </span>
+          </div>
+          <button id="btnVoiceToggle" type="button" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700 hover:border-cyan-400 transition flex items-center gap-1.5 shrink-0">
+            <span id="lblVoiceIcon">🔊</span>
+            <span id="lblVoiceText">Озвучка: ВКЛ</span>
+          </button>
+        </div>
+
+        <!-- Main Mission Card -->
+        <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-3 sm:p-3.5 flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span id="briefingMissionTitle" class="text-sm sm:text-base font-black text-amber-300 tracking-wide">
+              Оклахомская Буря
+            </span>
+            <span class="text-[10px] sm:text-xs text-cyan-400 font-mono font-bold">
+              📡 ТАКТИЧЕСКИЙ БРИФИНГ
+            </span>
+          </div>
+
+          <!-- Dynamic Bullets -->
+          <div id="briefingBullets" class="flex flex-col gap-1 text-xs text-slate-300 font-medium leading-relaxed">
+            <!-- 2-3 dynamic bullets -->
+          </div>
+
+          <!-- Visual Formula Box -->
+          <div id="briefingFormulaBox" class="mt-1 p-2 rounded-xl bg-slate-900/90 border border-cyan-500/30 flex items-center justify-center gap-2 text-xs sm:text-sm font-mono font-black text-cyan-300 text-center">
+            <!-- Dynamic formula e.g. [💣 3] + [🎯 2] = [ 5 Гц ] -->
+          </div>
+        </div>
+
+        <!-- Hardcore Cheat-Sheet Row -->
+        <div class="grid grid-cols-5 gap-1.5 text-center text-[10px] sm:text-xs font-mono font-bold">
+          <div class="p-1.5 rounded-lg bg-slate-950/70 border border-slate-800 text-amber-300">
+            <div class="text-[9px] text-slate-400">ЗОНД</div>
+            💣 +3
+          </div>
+          <div class="p-1.5 rounded-lg bg-slate-950/70 border border-slate-800 text-sky-300">
+            <div class="text-[9px] text-slate-400">ЗАЛП</div>
+            🎯 +2
+          </div>
+          <div class="p-1.5 rounded-lg bg-slate-950/70 border border-slate-800 text-purple-300">
+            <div class="text-[9px] text-slate-400">В ЗОНД</div>
+            💥 ×2
+          </div>
+          <div class="p-1.5 rounded-lg bg-slate-950/70 border border-slate-800 text-emerald-300">
+            <div class="text-[9px] text-slate-400">АРКАН</div>
+            🪝 +5
+          </div>
+          <div class="p-1.5 rounded-lg bg-slate-950/70 border border-rose-900/40 text-rose-300">
+            <div class="text-[9px] text-rose-400">РАСПАД</div>
+            ⏳ 6.5с
+          </div>
+        </div>
+
+        <!-- Hades-Style Tactical Perks on Even Levels -->
+        <div id="briefingPerksContainer" class="hidden flex flex-col gap-1.5">
+          <div class="flex items-center justify-between text-xs font-black text-amber-300">
+            <span>⚡ ТАКТИЧЕСКИЙ МОДУЛЬ НА ЗАБЕГ:</span>
+            <span class="text-[10px] text-slate-400 font-mono font-bold">• Клавиши [1], [2], [3]</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <!-- Perk 1 -->
+            <button id="btnBriefingPerk1" type="button" class="flex flex-col items-start p-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyan-400 text-left transition group">
+              <div class="flex items-center justify-between w-full mb-0.5">
+                <span class="text-xs font-black text-cyan-300">🧮 Округлитель</span>
+                <span class="text-[9px] font-mono text-cyan-400 font-bold">[1]</span>
+              </div>
+              <span class="text-[9px] text-slate-300 leading-tight">Погрешность ±1 от цели даёт Резонанс (2.0x урон)</span>
+            </button>
+            <!-- Perk 2 -->
+            <button id="btnBriefingPerk2" type="button" class="flex flex-col items-start p-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyan-400 text-left transition group">
+              <div class="flex items-center justify-between w-full mb-0.5">
+                <span class="text-xs font-black text-cyan-300">🪝 Гарпун</span>
+                <span class="text-[9px] font-mono text-cyan-400 font-bold">[2]</span>
+              </div>
+              <span class="text-[9px] text-slate-300 leading-tight">Зонд даёт +4 (вместо +3) и +35% радиус захвата</span>
+            </button>
+            <!-- Perk 3 -->
+            <button id="btnBriefingPerk3" type="button" class="flex flex-col items-start p-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyan-400 text-left transition group">
+              <div class="flex items-center justify-between w-full mb-0.5">
+                <span class="text-xs font-black text-cyan-300">⚡ Турбо-Мод</span>
+                <span class="text-[9px] font-mono text-cyan-400 font-bold">[3]</span>
+              </div>
+              <span class="text-[9px] text-slate-300 leading-tight">Сброс -1 при переборе на +1, +15% макс. скорость</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Big Center Button with Animated Timer Bar -->
+        <div class="relative overflow-hidden rounded-2xl">
+          <button id="btnDismissBriefing" type="button" class="w-full relative py-3 sm:py-3.5 px-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-sm sm:text-base tracking-wider uppercase shadow-[0_0_30px_rgba(56,189,248,0.5)] active:scale-[0.98] transition flex items-center justify-center gap-2 z-10">
+            <span id="lblBriefingBtnText">🚀 ГОТОВ! В БОЙ! [A / ПРОБЕЛ] (15с)</span>
+          </button>
+          <!-- Animated Progress Bar along the bottom of the button -->
+          <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-slate-950/60 z-20">
+            <div id="briefingTimerBar" class="h-full bg-cyan-300 transition-all duration-100 ease-linear" style="width: 100%;"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
     <!-- VICTORY OVERLAY MODAL (3-STAR RATING & FANFARE)                     -->
     <!-- =================================================================== -->
     <div id="victoryModal" class="hidden absolute inset-0 z-40 bg-slate-950/92 flex items-center justify-center p-4 text-white">
@@ -2505,6 +2621,51 @@ const SoundEngine = {
     } catch (e) {}
   },
 
+  playRadioBeep() {
+    if (!this.ctx || this.soundMode === 'mute') return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc1.type = 'sine';
+      osc2.type = 'triangle';
+      osc1.frequency.setValueAtTime(1400, now);
+      osc1.frequency.setValueAtTime(2200, now + 0.04);
+      osc2.frequency.setValueAtTime(1800, now);
+      osc2.frequency.setValueAtTime(2800, now + 0.04);
+      g.gain.setValueAtTime(0.16, now);
+      this.safeExpRamp(g.gain, 0.001, now + 0.12);
+      osc1.connect(g);
+      osc2.connect(g);
+      g.connect(this.compressor);
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 0.12);
+      osc2.stop(now + 0.12);
+    } catch (e) {}
+  },
+
+  speakBriefing(text) {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    if (typeof saveState !== 'undefined' && saveState.settings && saveState.settings.voiceBriefing === false) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'ru-RU';
+      utter.rate = 1.12;
+      utter.pitch = 0.95;
+      utter.volume = (this.soundMode === 'mute') ? 0 : 0.95;
+      window.speechSynthesis.speak(utter);
+    } catch (e) {}
+  },
+
+  cancelSpeech() {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      try { window.speechSynthesis.cancel(); } catch (e) {}
+    }
+  },
+
   playImpact(material = 'metal', strength = 1.0, worldX, worldY) {
     if (!this.ctx || this.soundMode === 'mute') return;
     try {
@@ -3329,6 +3490,19 @@ function draw3DTornadoColumn(tor, nowSec) {
       ctx.fillStyle = '#ffffff';
       ctx.fillText(codeText, pMath.x, pMath.y + 4);
 
+      // 6.5s Decay Depletion Bar (Lv. 2+)
+      if (currentConfig && currentConfig.level >= 2 && tor.mathCurrent > 0 && tor.mathDecayTimer !== undefined && tor.mathDecayTimer > 0) {
+        const decayFrac = Math.max(0, Math.min(1.0, tor.mathDecayTimer / 6.5));
+        const barW = pillW - 8;
+        const barH = 2.5;
+        const barX = pMath.x - barW * 0.5;
+        const barY = pMath.y + pillH * 0.5 - 3;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(barX, barY, barW, barH);
+        ctx.fillStyle = (decayFrac > 0.35) ? '#38bdf8' : '#f43f5e';
+        ctx.fillRect(barX, barY, barW * decayFrac, barH);
+      }
+
       // Subtitle badge
       ctx.font = '700 8.5px JetBrains Mono, monospace';
       ctx.fillStyle = '#fde047';
@@ -3855,6 +4029,10 @@ function draw3DProjectile(pr) {
         SoundEngine.playEASSiren();
       }
       syncHUD();
+
+      if (appMode === 'game') {
+        openLevelBriefing(saveState.currentLevel);
+      }
     }
 
     function spawnPickup(type, x, y) {
@@ -3918,6 +4096,264 @@ function draw3DProjectile(pr) {
     // HADES-STYLE IN-RUN PERKS & KISHOTENKETSU PHASE PACING
     // =========================================================================
     let activeRunPerk = null; // 'round' | 'tether' | 'turbo' | null
+    let isBriefingActive = false;
+    let briefingTimer = 15.0;
+    let briefingOpenedAt = 0;
+
+    function getLevelBriefingData(lvl) {
+      const cfg = generateLevelConfig(lvl);
+      const phaseInfo = getKishotenketsuInfo(lvl);
+      
+      let bullets = [];
+      let formula = '';
+      let speech = '';
+
+      if (lvl === 1) {
+        bullets = [
+          '🎯 Первая цель: одиночный вихрь в чистой степи.',
+          '💣 Сбрось 1 мину-зонд [ПРОБЕЛ] прямо по курсу торнадо.',
+          '⚡ Точный резонанс: 3 Гц активируется с первой попытки!'
+        ];
+        formula = '💣 Зонд [ 3 Гц ] = ⚡ РЕЗОНАНС [ 3 Гц ]';
+        speech = 'Внимание, охотник! Первая цель — смерч в чистом поле. Сбрось один зонд прямо по курсу торнадо для мгновенного резонанса три герца.';
+      } else if (lvl === 2) {
+        bullets = [
+          '🎯 Целевая частота ядра: 5 Гц.',
+          '💣 Зонд (+3 Гц) + 🎯 Залп (+2 Гц) = 5 Гц!',
+          '⏳ Внимание: включён распад частоты (6.5 сек при простое)!'
+        ];
+        formula = '💣 [ +3 ] + 🎯 [ +2 ] = ⚡ [ 5 Гц ]';
+        speech = 'Уровень два. Целевая частота — пять герц. Сбрось зонд на три герца и добей залпом на два герца. Помни о распаде частоты!';
+      } else if (lvl === 3) {
+        bullets = [
+          '🎯 Цели с чётными кодами: 6 и 8 Гц.',
+          '💥 Выстрел [🎯] сквозь установленный зонд удваивает частоту (×2)!',
+          '⚠️ Не бросай зонд под вихрь до активации: КЗ отнимет 2 Гц!'
+        ];
+        formula = '🎯 [ +2 ] ➔ 💥 В ЗОНД [ ×2 ] = [ 4, 8 Гц ]';
+        speech = 'Уровень три. Оператор удвоения. Стреляй залпом сквозь установленный зонд, чтобы удвоить частоту вихря. Береги неактивные зонды от замыкания!';
+      } else if (lvl === 4) {
+        bullets = [
+          '🪝 Связка 2-х зондов образует Грави-Аркан (+5 Гц)!',
+          '🔄 Биполярный щит смерча: чередуй оружие 💣 ⇄ 🎯 (+25% урона).',
+          '⚠️ Повторная атака тем же типом блокирует 70% урона!'
+        ];
+        formula = '🪝 АРКАН [ +5 ] + 💣 ⇄ 🎯 ЧЕРЕДОВАНИЕ';
+        speech = 'Уровень четыре. Свяжи два зонда в грави-аркан для рывка на пять герц. Следи за полярностью щита смерча и чередуй атаки.';
+      } else if (lvl === 5) {
+        bullets = [
+          '🌀 ФАЗА TEN: Вихри мутируют и пытаются вызвать перебор.',
+          '⚡ При переборе на +1 жми ТУРБО: акустический импульс снимет -1 Гц!',
+          '⏱ Окно коррекции — 1.8 секунды до аварийного сброса в 0.'
+        ];
+        formula = '[ ЦЕЛЬ + 1 ] ➔ ⚡ ТУРБО [ -1 Гц ] = ⚡ СПАСЕНИЕ';
+        speech = 'Фаза Тен. Смерчи сопротивляются. Если частота превысила цель на единицу, жми Турбо для экстренного сброса и спасения резонанса!';
+      } else if (lvl === 6) {
+        bullets = [
+          '🔗 Внимание: На радаре синхронные близнецы!',
+          '⚡ Взлом резонанса одного смерча отнимет 50% HP у второго!',
+          '🌋 Остерегайся пробуждающихся лавовых кратеров.'
+        ];
+        formula = '🔗 РЕЗОНАНС ТОРНАДО A ➔ -50% HP ТОРНАДО B';
+        speech = 'Внимание! На радаре два связанных близнеца. Резонанс одного вихря снимет половину прочности со второго.';
+      } else if (lvl === 7) {
+        bullets = [
+          '📐 На поле появились кристальные валуны!',
+          '🎯 Рикошет залпа от камня пробивает щит, наносит 2.5x урона и даёт +4 Гц.',
+          '⚡ Используй углы рикошета для быстрого взлома ядра!'
+        ];
+        formula = '🎯 ЗАЛП ➔ 🪨 ВАЛУН = 📐 РИКОШЕТ (+4 Гц, x2.5)';
+        speech = 'Геометрия боя. Используй рикошет залпа от каменных глыб: он пробивает щит и дает четыре герца.';
+      } else if (lvl <= 9) {
+        bullets = [
+          '🎓 Экзамен Мастера перед выходом Босса!',
+          '🧩 Используй полный арсенал: +3, +2, ×2, -1, аркан и рикошет.',
+          '⏳ Держи темп: распад 6.5с сбросит частоту при заминке!'
+        ];
+        formula = '💣(+3) | 🎯(+2) | 💥(×2) | 🪝(+5) | 📐(+4)';
+        speech = 'Экзамен мастера. Применяй весь арсенал формул: зонды, удвоение, арканы и рикошеты. Впереди Босс!';
+      } else if (cfg.isLevel100) {
+        bullets = [
+          '👑 ФИНАЛ 100: ГИПЕР-СУПЕРЪЯЧЕЙКА EF-5!',
+          '🌀 3 ядра Омега-Торнадо с тройным барьером и шквалом молний.',
+          '🏆 Докажи, что ты абсолютный Властелин Бурь!'
+        ];
+        formula = '👑 ОМЕГА-РЕЗОНАНС: 3 ЯДРА [ 12, 14, 16 Гц ]';
+        speech = 'Финал всей операции. Гипер-суперячейка пятой категории. Три ядра омега-смерча. Покажи высшее мастерство охотника!';
+      } else if (cfg.isBoss) {
+        bullets = [
+          `👑 БОСС ${lvl}: ШТОРМОВОЙ ТИТАН!`,
+          '🛡 3 последовательные фазы резонанса для снятия брони.',
+          '⚡ Лазерное наведение и сокрушительный таран!'
+        ];
+        formula = '👑 ФАЗЫ БОССА: [ ФАЗА 1 ] ➔ [ ФАЗА 2 ] ➔ [ ФАЗА 3 ]';
+        speech = `Тревога максимального уровня! Выход Штормового Титана на уровне ${lvl}. Три фазы резонанса, мощная броня. Уничтожь его ядро!`;
+      } else {
+        bullets = [
+          `📡 Аномалия уровня ${lvl}: ${cfg.name}.`,
+          '🧮 Подбирай комбинацию частот для идеального резонанса ядра.',
+          '⚠️ Береги неактивные зонды (-2 Гц) и следи за распадом (6.5с)!'
+        ];
+        formula = '💣(+3) | 🎯(+2) | 💥(×2) | 🪝(+5) | 📐(+4)';
+        speech = `Уровень ${lvl}. Анализ аномалии. Подбери частоту ядра до резонанса и избегай повреждения неактивных зондов.`;
+      }
+
+      return { cfg, phaseInfo, bullets, formula, speech };
+    }
+
+    function updateVoiceBriefingButtonUI() {
+      if (!saveState.settings) saveState.settings = {};
+      const isVoiceOn = (saveState.settings.voiceBriefing !== false);
+      const icon = document.getElementById('lblVoiceIcon');
+      const txt = document.getElementById('lblVoiceText');
+      if (icon) icon.textContent = isVoiceOn ? '🔊' : '🔇';
+      if (txt) txt.textContent = isVoiceOn ? 'Озвучка: ВКЛ' : 'Озвучка: ВЫКЛ';
+    }
+
+    function toggleVoiceBriefing() {
+      if (!saveState.settings) saveState.settings = {};
+      saveState.settings.voiceBriefing = !(saveState.settings.voiceBriefing !== false);
+      writeSaveData();
+      updateVoiceBriefingButtonUI();
+      if (!saveState.settings.voiceBriefing) {
+        if (typeof SoundEngine !== 'undefined' && SoundEngine.cancelSpeech) {
+          SoundEngine.cancelSpeech();
+        }
+      } else {
+        if (isBriefingActive) {
+          const data = getLevelBriefingData(saveState.currentLevel);
+          if (typeof SoundEngine !== 'undefined' && SoundEngine.speakBriefing) {
+            SoundEngine.speakBriefing(data.speech);
+          }
+        }
+      }
+    }
+
+    function updateBriefingPerkUI(perkType) {
+      const cards = [
+        { id: 'btnBriefingPerk1', type: 'round' },
+        { id: 'btnBriefingPerk2', type: 'tether' },
+        { id: 'btnBriefingPerk3', type: 'turbo' }
+      ];
+      cards.forEach(c => {
+        const el = document.getElementById(c.id);
+        if (!el) return;
+        if (c.type === perkType) {
+          el.className = 'flex flex-col items-start p-2 rounded-xl bg-cyan-950/80 border-2 border-cyan-400 text-left transition shadow-[0_0_15px_rgba(34,211,238,0.4)] ring-1 ring-cyan-300';
+        } else {
+          el.className = 'flex flex-col items-start p-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyan-400 text-left transition group';
+        }
+      });
+    }
+
+    function openLevelBriefing(lvl) {
+      isBriefingActive = true;
+      isGamePaused = true;
+      briefingTimer = 15.0;
+      briefingOpenedAt = performance.now();
+
+      const data = getLevelBriefingData(lvl);
+      const modal = document.getElementById('levelBriefingModal');
+      if (!modal) return;
+
+      const badge = document.getElementById('briefingLevelBadge');
+      if (badge) badge.textContent = `УРОВЕНЬ ${lvl} / 100`;
+
+      const pill = document.getElementById('briefingPhasePill');
+      if (pill) {
+        pill.textContent = data.phaseInfo.title;
+        pill.className = `px-2.5 py-0.5 rounded-lg text-xs font-black tracking-wide border ${data.phaseInfo.color}`;
+      }
+
+      updateVoiceBriefingButtonUI();
+
+      const title = document.getElementById('briefingMissionTitle');
+      if (title) title.textContent = data.cfg.name;
+
+      const bulletsEl = document.getElementById('briefingBullets');
+      if (bulletsEl) {
+        bulletsEl.innerHTML = data.bullets.map(b => `<div>${b}</div>`).join('');
+      }
+
+      const formulaEl = document.getElementById('briefingFormulaBox');
+      if (formulaEl) {
+        formulaEl.textContent = data.formula;
+      }
+
+      // Hades Tactical Perks on even levels
+      const perksCont = document.getElementById('briefingPerksContainer');
+      if (perksCont) {
+        if (lvl % 2 === 0) {
+          perksCont.classList.remove('hidden');
+          updateBriefingPerkUI(activeRunPerk);
+        } else {
+          perksCont.classList.add('hidden');
+        }
+      }
+
+      const btnText = document.getElementById('lblBriefingBtnText');
+      if (btnText) btnText.textContent = `🚀 ГОТОВ! В БОЙ! [A / ПРОБЕЛ] (15с)`;
+
+      const timerBar = document.getElementById('briefingTimerBar');
+      if (timerBar) timerBar.style.width = '100%';
+
+      modal.classList.remove('hidden');
+
+      // Procedural Radio Beep & Russian Voice Briefing
+      if (typeof SoundEngine !== 'undefined') {
+        if (SoundEngine.playRadioBeep) SoundEngine.playRadioBeep();
+        if (saveState.settings && saveState.settings.voiceBriefing !== false) {
+          setTimeout(() => {
+            if (isBriefingActive && SoundEngine.speakBriefing) {
+              SoundEngine.speakBriefing(data.speech);
+            }
+          }, 250);
+        }
+      }
+
+      if (typeof GamepadEngine !== 'undefined' && GamepadEngine.sendTelemetry) {
+        GamepadEngine.sendTelemetry();
+      }
+    }
+
+    function dismissLevelBriefing() {
+      if (!isBriefingActive) return;
+      isBriefingActive = false;
+      isGamePaused = false;
+
+      const modal = document.getElementById('levelBriefingModal');
+      if (modal) modal.classList.add('hidden');
+
+      if (typeof SoundEngine !== 'undefined') {
+        if (SoundEngine.cancelSpeech) SoundEngine.cancelSpeech();
+        if (SoundEngine.playCountdownGo) SoundEngine.playCountdownGo();
+      }
+
+      if (typeof GamepadEngine !== 'undefined' && GamepadEngine.sendTelemetry) {
+        GamepadEngine.sendTelemetry();
+      }
+    }
+
+    function updateLevelBriefingTimer(dt) {
+      if (!isBriefingActive) return;
+      briefingTimer -= dt;
+      if (briefingTimer < 0) briefingTimer = 0;
+
+      const secsInt = Math.ceil(briefingTimer);
+      const btnText = document.getElementById('lblBriefingBtnText');
+      if (btnText) {
+        btnText.textContent = `🚀 ГОТОВ! В БОЙ! [A / ПРОБЕЛ] (${secsInt}с)`;
+      }
+      const timerBar = document.getElementById('briefingTimerBar');
+      if (timerBar) {
+        const pct = Math.max(0, Math.min(100, (briefingTimer / 15.0) * 100));
+        timerBar.style.width = pct + '%';
+      }
+
+      if (briefingTimer <= 0) {
+        dismissLevelBriefing();
+      }
+    }
 
     function getKishotenketsuInfo(lvl) {
       const step = (lvl - 1) % 10;
@@ -4040,6 +4476,7 @@ function draw3DProjectile(pr) {
       }
 
       tor.mathCurrent = newVal;
+      tor.mathDecayTimer = 6.5; // Reset 6.5s decay timer on each valid math step!
 
       // Perk 1: Quantum Rounding (±1 from target counts as Resonance with 2.0x damage)
       if (activeRunPerk === 'round' && (tor.mathCurrent === tor.mathTarget - 1 || tor.mathCurrent === tor.mathTarget + 1)) {
@@ -4063,6 +4500,7 @@ function draw3DProjectile(pr) {
           const pool = (lvl === 1) ? [3] : ((lvl === 2) ? [5, 7] : ((lvl === 3) ? [6, 8, 10, 12] : [5, 6, 7, 8, 9, 10, 11, 12, 14]));
           tor.mathTarget = pool[Math.floor(Math.random() * pool.length)];
           tor.mathCurrent = 0;
+          tor.mathDecayTimer = 0;
         }
         return { dmgMultiplier: 2.0, isOvershoot: false, isExact: true };
       }
@@ -4114,6 +4552,7 @@ function draw3DProjectile(pr) {
           const nextTgt = tor.bossPhaseTargets[tor.bossPhase - 1] || 12;
           tor.mathTarget = nextTgt;
           tor.mathCurrent = 0;
+          tor.mathDecayTimer = 0;
           spawnDamageNumber(`👑 ВЗЛОМ ФАЗЫ ${tor.bossPhase-1}/${tor.bossMaxPhases}!`, tor.x, tor.y - 65, '#f59e0b', true, 24);
           spawnPickup('coin', tor.x - 25, tor.y);
           spawnPickup('coin', tor.x + 25, tor.y);
@@ -4129,6 +4568,7 @@ function draw3DProjectile(pr) {
           const pool = (lvl === 1) ? [3] : ((lvl === 2) ? [5, 7] : ((lvl === 3) ? [6, 8, 10, 12] : [5, 6, 7, 8, 9, 10, 11, 12, 14]));
           tor.mathTarget = pool[Math.floor(Math.random() * pool.length)];
           tor.mathCurrent = 0;
+          tor.mathDecayTimer = 0;
         }
         return { dmgMultiplier: 3.0, isOvershoot: false, isExact: true };
       }
@@ -4148,6 +4588,7 @@ function draw3DProjectile(pr) {
         spawnDamageNumber(`⚠️ ПЕРЕБОР ${tor.mathCurrent}/${tor.mathTarget}! СБРОС 0!`, tor.x, tor.y - 48, '#ef4444', true, 18);
         spawnShockwave(tor.x, tor.y, '#ef4444', 110);
         tor.mathCurrent = 0;
+        tor.mathDecayTimer = 0;
         tor.angrySurgeTimer = 1.2; // +25% angry speed surge!
         tor.hitFlash = 0.25;
         if (typeof SoundEngine !== 'undefined' && SoundEngine.playDamage) {
@@ -4198,6 +4639,17 @@ function draw3DProjectile(pr) {
 
     // Zero-Mouse Gamepad & Keyboard Modal Transitions
     function handleModalGamepadAction(actionType) {
+      // Pre-Level Briefing Modal Dismissal (with 450ms safety grace)
+      const briefingModal = document.getElementById('levelBriefingModal');
+      const isBriefingOpen = briefingModal && !briefingModal.classList.contains('hidden');
+      if (isBriefingOpen) {
+        if (actionType === 'confirm' && performance.now() - briefingOpenedAt >= 450) {
+          dismissLevelBriefing();
+          return true;
+        }
+        return false;
+      }
+
       // 600ms grace cooldown to prevent accidental skips from held fire button
       if (performance.now() - modalOpenedAt < 600) return false;
 
@@ -4521,6 +4973,28 @@ function draw3DProjectile(pr) {
     window.addEventListener('keydown', (e) => {
       keys[e.key.toLowerCase()] = true;
       keys[e.code] = true;
+
+      // Briefing Modal Perk Shortcuts: 1, 2, 3 on even levels
+      if (isBriefingActive && (saveState.currentLevel % 2 === 0)) {
+        if (e.code === 'Digit1' || e.key === '1') {
+          selectRunPerk('round');
+          updateBriefingPerkUI('round');
+          e.preventDefault();
+          return;
+        }
+        if (e.code === 'Digit2' || e.key === '2') {
+          selectRunPerk('tether');
+          updateBriefingPerkUI('tether');
+          e.preventDefault();
+          return;
+        }
+        if (e.code === 'Digit3' || e.key === '3') {
+          selectRunPerk('turbo');
+          updateBriefingPerkUI('turbo');
+          e.preventDefault();
+          return;
+        }
+      }
 
       // Perk Selection Overlay Keyboard Shortcuts: 1, 2, 3 or Escape
       const perkOverlay = document.getElementById('perkSelectOverlay');
@@ -5059,8 +5533,26 @@ function draw3DProjectile(pr) {
             spawnDamageNumber(`⚠️ ПЕРЕБОР ${tor.mathCurrent}/${tor.mathTarget}! СБРОС 0!`, tor.x, tor.y - 48, '#ef4444', true, 18);
             spawnShockwave(tor.x, tor.y, '#ef4444', 110);
             tor.mathCurrent = 0;
+            tor.mathDecayTimer = 0;
             tor.angrySurgeTimer = 1.2;
             tor.hitFlash = 0.25;
+            if (typeof SoundEngine !== 'undefined' && SoundEngine.playDamage) {
+              SoundEngine.playDamage();
+            }
+          }
+        }
+
+        // Hardcore Rule 1: 6.5s Resonance Decay Timer (Lv. 2+)
+        if (currentConfig && currentConfig.level >= 2 && tor.mathCurrent > 0 && tor.mathTarget !== undefined) {
+          if (tor.mathDecayTimer === undefined || tor.mathDecayTimer <= 0) {
+            tor.mathDecayTimer = 6.5;
+          }
+          tor.mathDecayTimer -= dt;
+          if (tor.mathDecayTimer <= 0) {
+            tor.mathCurrent = 0;
+            tor.mathDecayTimer = 0;
+            spawnDamageNumber('⏳ ЧАСТОТА РАСПАЛАСЬ (0)!', tor.x, tor.y - 48, '#f43f5e', true, 18);
+            spawnShockwave(tor.x, tor.y, '#f43f5e', 90);
             if (typeof SoundEngine !== 'undefined' && SoundEngine.playDamage) {
               SoundEngine.playDamage();
             }
@@ -5140,6 +5632,25 @@ function draw3DProjectile(pr) {
           if (gp.armTimer <= 0) {
             gp.isArmed = true;
             SoundEngine.playProbeArmed();
+          }
+
+          // Hardcore Rule 2: Short-Circuit Penalty on Unarmed Probe (Lv. 3+)
+          if (currentConfig && currentConfig.level >= 3 && !gp.isSucked && !gp.detonated) {
+            tornadoes.forEach((tor) => {
+              if (tor.hp > 0 && tor.mathTarget !== undefined) {
+                const d = Math.hypot(tor.x - gp.x, tor.y - gp.y);
+                if (d < tor.coreRadius * 0.95) {
+                  gp.detonated = true; // destroy the probe!
+                  tor.mathCurrent = Math.max(0, (tor.mathCurrent || 0) - 2);
+                  tor.mathDecayTimer = (tor.mathCurrent > 0) ? 6.5 : 0;
+                  spawnDamageNumber('⚠️ КЗ НЕАКТИВНОГО ЗОНДА (-2 Гц)!', tor.x, tor.y - 40, '#f43f5e', true, 16);
+                  spawnShockwave(gp.x, gp.y, '#fbbf24', 50);
+                  if (typeof SoundEngine !== 'undefined') {
+                    if (SoundEngine.playBumper) SoundEngine.playBumper();
+                  }
+                }
+              }
+            });
           }
         }
 
@@ -7310,6 +7821,22 @@ function draw3DProjectile(pr) {
     });
     document.getElementById('saveFileInput')?.addEventListener('change', handleSaveFileSelected);
 
+    // Pre-Level Tactical Briefing Listeners
+    document.getElementById('btnDismissBriefing')?.addEventListener('click', () => dismissLevelBriefing());
+    document.getElementById('btnVoiceToggle')?.addEventListener('click', () => toggleVoiceBriefing());
+    document.getElementById('btnBriefingPerk1')?.addEventListener('click', () => {
+      selectRunPerk('round');
+      updateBriefingPerkUI('round');
+    });
+    document.getElementById('btnBriefingPerk2')?.addEventListener('click', () => {
+      selectRunPerk('tether');
+      updateBriefingPerkUI('tether');
+    });
+    document.getElementById('btnBriefingPerk3')?.addEventListener('click', () => {
+      selectRunPerk('turbo');
+      updateBriefingPerkUI('turbo');
+    });
+
     // Tactical Run Perk Card Buttons
     document.getElementById('btnPerkCard1')?.addEventListener('click', () => selectRunPerk('round'));
     document.getElementById('btnPerkCard2')?.addEventListener('click', () => selectRunPerk('tether'));
@@ -7421,6 +7948,9 @@ function draw3DProjectile(pr) {
 
         if (w > 0 && h > 0) {
           if (appMode === 'game') {
+            if (isBriefingActive) {
+              updateLevelBriefingTimer(dt);
+            }
             if (!isGamePaused) {
               updateGamePhysics(dt, nowSec);
             }
@@ -7603,7 +8133,7 @@ function draw3DProjectile(pr) {
         const defModal = document.getElementById('defeatModal');
         const isVicOpen = vicModal && !vicModal.classList.contains('hidden');
         const isDefOpen = defModal && !defModal.classList.contains('hidden');
-        const currentGameState = !isGamePaused ? 'playing' : (isVicOpen ? 'victory' : (isDefOpen ? 'defeat' : 'paused'));
+        const currentGameState = isBriefingActive ? 'briefing' : (!isGamePaused ? 'playing' : (isVicOpen ? 'victory' : (isDefOpen ? 'defeat' : 'paused')));
 
         let nearestMathTor = null;
         let minD = Infinity;
@@ -7828,7 +8358,10 @@ function draw3DProjectile(pr) {
           // GameState status banner on smartphone controller
           const padStatus = document.getElementById('padConnStatusLabel');
           if (padStatus && msg.gameState) {
-            if (msg.gameState === 'victory') {
+            if (msg.gameState === 'briefing') {
+              padStatus.textContent = '📡 БРИФИНГ [A] ГОТОВ!';
+              padStatus.className = 'text-[11px] font-black text-cyan-300 animate-pulse';
+            } else if (msg.gameState === 'victory') {
               padStatus.textContent = '🏆 ПОБЕДА! [A/⚡] СЛЕД.';
               padStatus.className = 'text-[11px] font-black text-emerald-300 animate-pulse';
             } else if (msg.gameState === 'defeat') {
