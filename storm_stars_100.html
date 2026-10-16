@@ -718,114 +718,6 @@
       </div>
     </div>
 
-    <!-- FULL-SCREEN ESPORTS CONTROLLER UI (ACTIVE IN GAMEPAD MODE) -->
-    <div id="phoneControllerUI" class="hidden fixed inset-0 z-50 bg-[#02050d] text-white flex flex-col justify-between p-2 sm:p-4 select-none touch-none overscroll-none overflow-hidden">
-      <!-- Top Telemetry Header -->
-      <div class="flex items-center justify-between px-3 py-1.5 bg-slate-900/95 rounded-2xl border border-slate-800">
-        <div class="flex items-center gap-2">
-          <span id="padConnDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="padCarName" class="font-black text-amber-400 text-xs sm:text-sm">🌪️ ДОМИНАТОР</span>
-          <span id="padLevelBadge" class="text-[10px] bg-slate-800 text-cyan-300 px-2 py-0.5 rounded-full font-bold">LVL 1</span>
-          <span id="padComboBadge" class="hidden text-[10px] bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full font-black animate-pulse">x1</span>
-        </div>
-        <div class="flex items-center gap-2.5">
-          <div id="padPingBadge" class="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30">
-            ⚡ -- ms
-          </div>
-          <button id="btnPadDisconnect" type="button" class="text-[10px] font-bold text-slate-400 hover:text-rose-400 px-2.5 py-1 bg-slate-800 rounded-lg active:scale-95">
-            ✕ Выход
-          </button>
-        </div>
-      </div>
-
-      <!-- Telemetry Dashboard: HP, Ammo, Super -->
-      <div class="grid grid-cols-3 gap-2 px-1 my-1">
-        <!-- HP Bar -->
-        <div class="bg-slate-900/85 p-2 rounded-xl border border-slate-800 flex flex-col justify-center">
-          <div class="flex justify-between text-[10px] font-black text-slate-400 mb-1">
-            <span>💚 ПРОЧНОСТЬ</span>
-            <span id="padHpText" class="font-mono text-emerald-300">100%</span>
-          </div>
-          <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
-            <div id="padHpBar" class="h-full bg-gradient-to-r from-emerald-500 to-green-400 w-full transition-all duration-75"></div>
-          </div>
-        </div>
-
-        <!-- Ammo Pips -->
-        <div class="bg-slate-900/85 p-2 rounded-xl border border-slate-800 flex flex-col justify-center">
-          <div class="flex justify-between text-[10px] font-black text-slate-400 mb-1">
-            <span>⚡ ЗОНДЫ</span>
-            <span id="padAmmoText" class="font-mono text-amber-300">3/3</span>
-          </div>
-          <div class="grid grid-cols-3 gap-1 h-3">
-            <div id="padAmmo1" class="h-full rounded-sm bg-amber-400"></div>
-            <div id="padAmmo2" class="h-full rounded-sm bg-amber-400"></div>
-            <div id="padAmmo3" class="h-full rounded-sm bg-amber-400"></div>
-          </div>
-        </div>
-
-        <!-- Super Charge Bar -->
-        <div class="bg-slate-900/85 p-2 rounded-xl border border-slate-800 flex flex-col justify-center">
-          <div class="flex justify-between text-[10px] font-black text-slate-400 mb-1">
-            <span>💥 УЛЬТА</span>
-            <span id="padSuperText" class="font-mono text-amber-400">0%</span>
-          </div>
-          <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
-            <div id="padSuperBar" class="h-full bg-gradient-to-r from-amber-500 to-rose-500 w-0 transition-all duration-75"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Main Controls Area: Left 360° Joystick Arena, Right Action Buttons -->
-      <div class="flex-1 flex items-center justify-between px-2 sm:px-6 gap-3 relative min-h-0">
-        <!-- Left: Virtual Joystick -->
-        <div class="w-1/2 h-full flex items-center justify-center relative touch-none select-none">
-          <div id="padTouchArea" class="w-44 h-44 sm:w-56 sm:h-56 rounded-full bg-slate-900/90 border-2 border-slate-700/70 relative flex items-center justify-center shadow-2xl active:border-cyan-400 transition-colors">
-            <!-- Crosshairs -->
-            <div class="absolute inset-x-0 top-1/2 h-px bg-slate-800 pointer-events-none"></div>
-            <div class="absolute inset-y-0 left-1/2 w-px bg-slate-800 pointer-events-none"></div>
-            <div class="absolute inset-4 rounded-full border border-dashed border-slate-700/40 pointer-events-none"></div>
-            <!-- Thumbstick Handle -->
-            <div id="padStickThumb" class="w-18 h-18 sm:w-22 sm:h-22 rounded-full bg-gradient-to-br from-cyan-400 via-sky-600 to-blue-700 shadow-[0_0_20px_rgba(14,165,233,0.5)] border-2 border-white/80 pointer-events-none flex items-center justify-center text-xl font-black">
-              🕹️
-            </div>
-          </div>
-        </div>
-
-        <!-- Right: Combat Action Buttons -->
-        <div class="w-1/2 h-full flex flex-col justify-around items-end py-1 sm:py-2 pr-1 sm:pr-4 select-none touch-none">
-          <!-- Super / Ult Button (Top Right) -->
-          <button id="btnPadSuper" type="button" class="w-20 h-20 sm:w-26 sm:h-26 rounded-full bg-gradient-to-br from-amber-500 via-rose-600 to-purple-700 border-3 border-amber-300/40 text-white font-black text-xs sm:text-sm flex flex-col items-center justify-center shadow-xl active:scale-90 transition-transform">
-            <span class="text-2xl sm:text-3xl">💥</span>
-            <span>УЛЬТА</span>
-          </button>
-
-          <div class="flex items-center gap-3 sm:gap-5 mt-2">
-            <!-- Turbo Button -->
-            <button id="btnPadTurbo" type="button" class="w-18 h-18 sm:w-22 sm:h-22 rounded-full bg-gradient-to-br from-cyan-500 to-blue-700 border-2 border-cyan-300/50 text-white font-black text-xs sm:text-sm flex flex-col items-center justify-center shadow-lg active:scale-90 transition-transform">
-              <span class="text-xl sm:text-2xl">⚡</span>
-              <span>ТУРБО</span>
-            </button>
-
-            <!-- Main Attack Probe Button (Huge) -->
-            <button id="btnPadShoot" type="button" class="w-24 h-24 sm:w-30 sm:h-30 rounded-full bg-gradient-to-br from-amber-500 via-orange-600 to-rose-600 border-4 border-amber-300 text-white font-black text-sm sm:text-base flex flex-col items-center justify-center shadow-2xl active:scale-95 transition-transform">
-              <span class="text-3xl sm:text-4xl">🔥</span>
-              <span>ОГОНЬ</span>
-              <span class="text-[9px] text-amber-200 opacity-80">АВТО</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bottom Bar: Gyroscope Steering Toggle & Info -->
-      <div class="flex items-center justify-between px-3 py-1 bg-slate-900/70 rounded-xl border border-slate-800/80 text-[11px] text-slate-400">
-        <button id="btnPadGyroToggle" type="button" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800 text-emerald-300 active:scale-95 transition">
-          <span>📲</span> <span>Руль наклоном: <b id="lblPadGyro">ВЫКЛ</b></span>
-        </button>
-        <span class="font-mono text-[10px] text-slate-500">STORM STARS ESPORTS CONTROLLER</span>
-      </div>
-    </div>
-
     <!-- TOAST NOTIFICATION & FILE INPUT -->
     <div id="toastNotification" class="hidden pointer-events-none fixed top-12 inset-x-0 z-50 flex justify-center px-4">
       <div id="toastText" class="hud-pill px-4 py-2 rounded-2xl text-xs sm:text-sm font-black text-amber-300 border border-amber-400/50 shadow-2xl bg-slate-900/95 backdrop-blur animate-bounce">
@@ -851,6 +743,116 @@
           <button id="btnForceTornado" type="button" class="icon-btn bg-rose-600/80">🌪️</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- FULL-SCREEN ESPORTS CONTROLLER UI (ACTIVE IN GAMEPAD MODE - OUTSIDE .app-shell!) -->
+  <div id="phoneControllerUI" class="hidden fixed inset-0 z-50 bg-[#02050d] text-white flex-col justify-between p-3 sm:p-5 select-none touch-none overscroll-none overflow-hidden">
+    <!-- Top Telemetry Header -->
+    <div class="flex items-center justify-between px-3 py-2 bg-slate-900/95 rounded-2xl border border-slate-800 shadow-lg">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span id="padConnDot" class="w-3 h-3 rounded-full bg-amber-400 animate-pulse"></span>
+        <span id="padConnStatusLabel" class="text-[11px] font-bold text-amber-300">Поиск ПК...</span>
+        <span class="text-slate-600">|</span>
+        <span id="padCarName" class="font-black text-amber-400 text-xs sm:text-sm">🌪️ ДОМИНАТОР</span>
+        <span id="padLevelBadge" class="text-[10px] bg-slate-800 text-cyan-300 px-2 py-0.5 rounded-full font-bold">LVL 1</span>
+        <span id="padComboBadge" class="hidden text-[10px] bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full font-black animate-pulse">x1</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div id="padPingBadge" class="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30">
+          ⚡ -- ms
+        </div>
+        <button id="btnPadDisconnect" type="button" class="text-[11px] font-bold text-slate-300 hover:text-rose-400 px-3 py-1 bg-slate-800 rounded-xl border border-slate-700 active:scale-95">
+          ✕ В игру
+        </button>
+      </div>
+    </div>
+
+    <!-- Telemetry Dashboard: HP, Ammo, Super -->
+    <div class="grid grid-cols-3 gap-2 px-1 my-1.5">
+      <!-- HP Bar -->
+      <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-center">
+        <div class="flex justify-between text-[10px] font-black text-slate-400 mb-1">
+          <span>💚 БРОНЯ</span>
+          <span id="padHpText" class="font-mono text-emerald-300">100%</span>
+        </div>
+        <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+          <div id="padHpBar" class="h-full bg-gradient-to-r from-emerald-500 to-green-400 w-full transition-all duration-75"></div>
+        </div>
+      </div>
+
+      <!-- Ammo Pips -->
+      <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-center">
+        <div class="flex justify-between text-[10px] font-black text-slate-400 mb-1">
+          <span>📡 ЗОНДЫ</span>
+          <span id="padAmmoText" class="font-mono text-amber-300">3/3</span>
+        </div>
+        <div class="grid grid-cols-3 gap-1 h-3">
+          <div id="padAmmo1" class="h-full rounded-sm bg-amber-400"></div>
+          <div id="padAmmo2" class="h-full rounded-sm bg-amber-400"></div>
+          <div id="padAmmo3" class="h-full rounded-sm bg-amber-400"></div>
+        </div>
+      </div>
+
+      <!-- Super Charge Bar -->
+      <div class="bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex flex-col justify-center">
+        <div class="flex justify-between text-[10px] font-black text-slate-400 mb-1">
+          <span>💥 УЛЬТА</span>
+          <span id="padSuperText" class="font-mono text-amber-400">0%</span>
+        </div>
+        <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+          <div id="padSuperBar" class="h-full bg-gradient-to-r from-amber-500 to-rose-500 w-0 transition-all duration-75"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Controls Area: Left 360° Joystick Arena, Right Action Buttons -->
+    <div class="flex-1 flex flex-row items-center justify-between px-2 sm:px-8 gap-4 relative min-h-0">
+      <!-- Left: Virtual Joystick -->
+      <div class="w-1/2 h-full flex flex-col items-center justify-center relative touch-none select-none">
+        <div id="padTouchArea" class="w-40 h-40 sm:w-56 sm:h-56 rounded-full bg-slate-900/95 border-4 border-cyan-500/60 relative flex items-center justify-center shadow-[0_0_35px_rgba(6,182,212,0.3)] active:border-cyan-300 transition-colors">
+          <!-- Crosshairs -->
+          <div class="absolute inset-x-0 top-1/2 h-px bg-slate-800 pointer-events-none"></div>
+          <div class="absolute inset-y-0 left-1/2 w-px bg-slate-800 pointer-events-none"></div>
+          <div class="absolute inset-4 rounded-full border-2 border-dashed border-cyan-500/35 pointer-events-none"></div>
+          <!-- Thumbstick Handle -->
+          <div id="padStickThumb" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-700 shadow-[0_0_25px_rgba(14,165,233,0.7)] border-2 border-white pointer-events-none flex flex-col items-center justify-center text-2xl font-black">
+            <span>🕹️</span>
+            <span class="text-[8px] text-white/90 tracking-wider">РУЛЬ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Combat Action Buttons -->
+      <div class="w-1/2 h-full flex flex-col justify-center items-center sm:items-end gap-4 py-2 select-none touch-none">
+        <!-- Top Row: Turbo + Super -->
+        <div class="flex items-center gap-3 sm:gap-5">
+          <button id="btnPadTurbo" type="button" class="w-18 h-18 sm:w-24 sm:h-24 p-3 rounded-full bg-gradient-to-br from-emerald-400 to-teal-700 border-2 border-emerald-200 text-slate-950 font-black text-xs sm:text-sm flex flex-col items-center justify-center shadow-xl active:scale-90 transition-transform">
+            <span class="text-2xl sm:text-3xl">⚡</span>
+            <span>ТУРБО</span>
+          </button>
+
+          <button id="btnPadSuper" type="button" class="w-18 h-18 sm:w-24 sm:h-24 p-3 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-600 border-2 border-yellow-200 text-white font-black text-xs sm:text-sm flex flex-col items-center justify-center shadow-xl active:scale-90 transition-transform">
+            <span class="text-2xl sm:text-3xl">💀</span>
+            <span>УЛЬТА</span>
+          </button>
+        </div>
+
+        <!-- Bottom Row: Huge Main Attack Probe Button -->
+        <button id="btnPadShoot" type="button" class="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-br from-rose-500 via-red-600 to-orange-600 border-4 border-white text-white font-black text-sm sm:text-base flex flex-col items-center justify-center shadow-[0_0_35px_rgba(244,63,94,0.6)] active:scale-90 transition-transform">
+          <span class="text-3xl sm:text-4xl">📡</span>
+          <span class="mt-0.5">ОГОНЬ</span>
+          <span class="text-[9px] text-amber-200">ЗАЖМИ = АВТО</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bottom Bar: Gyroscope Steering Toggle & PIN Info -->
+    <div class="flex items-center justify-between px-3 py-1.5 bg-slate-900/90 rounded-xl border border-slate-800 text-[11px] text-slate-400">
+      <button id="btnPadGyroToggle" type="button" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-emerald-300 active:scale-95 transition">
+        <span>📲</span> <span>Гиро-руль наклоном: <b id="lblPadGyro">ВЫКЛ</b></span>
+      </button>
+      <span id="padRoomCodeLabel" class="font-mono text-xs font-bold text-fuchsia-300">КОД: ----</span>
     </div>
   </div>
 
@@ -5511,13 +5513,16 @@ function draw3DProjectile(pr) {
         if (!this.roomCode) return;
         if (pinDisplay) pinDisplay.textContent = this.roomCode;
 
-        const baseUrl = (typeof window !== 'undefined' && window.location) ? window.location.href.split('?')[0] : 'https://stormstars.game';
+        let baseUrl = 'https://rasulkaraganda2024.github.io/storm-stars-3d/';
+        if (typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http')) {
+          baseUrl = window.location.href.split('?')[0].split('#')[0];
+        }
         const padUrl = baseUrl + '?pad=' + this.roomCode;
 
         if (linkInput) linkInput.value = padUrl;
         if (openTabBtn) openTabBtn.href = padUrl;
         if (qrImage) {
-          qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(padUrl);
+          qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=6&data=' + encodeURIComponent(padUrl);
         }
       },
 
@@ -5609,7 +5614,7 @@ function draw3DProjectile(pr) {
         this.isControllerMode = true;
         this.roomCode = String(code).trim();
 
-        // Hide regular game shell to conserve 100% of phone resources
+        // Hide regular game shell (controller UI is now outside .app-shell!)
         const appShell = document.querySelector('.app-shell');
         if (appShell) appShell.style.display = 'none';
 
@@ -5618,6 +5623,8 @@ function draw3DProjectile(pr) {
           ctrlUI.classList.remove('hidden');
           ctrlUI.style.display = 'flex';
         }
+        const roomLbl = document.getElementById('padRoomCodeLabel');
+        if (roomLbl) roomLbl.textContent = 'КОД: ' + this.roomCode;
 
         // BroadcastChannel bridge
         if (typeof BroadcastChannel !== 'undefined') {
@@ -5628,25 +5635,42 @@ function draw3DProjectile(pr) {
           } catch (e) {}
         }
 
-        // WebRTC Client via PeerJS
-        if (typeof Peer !== 'undefined') {
+        // WebRTC Client via PeerJS (with retry if PeerJS CDN is still loading)
+        const connectPeerJS = () => {
+          if (typeof Peer === 'undefined') {
+            setTimeout(connectPeerJS, 300);
+            return;
+          }
           try {
             const clientPeer = new Peer({ debug: 0 });
             clientPeer.on('open', () => {
-              const conn = clientPeer.connect('storm-stars-pad-' + this.roomCode, { reliable: true });
-              conn.on('open', () => {
-                this.activeConn = conn;
-                conn.send({ type: 'hello', t: Date.now() });
-                this.updateControllerStatus(true);
-              });
-              conn.on('data', (data) => this.handleControllerIncoming(data));
-              conn.on('close', () => this.updateControllerStatus(false));
-              conn.on('error', () => this.updateControllerStatus(false));
+              const attemptConnect = () => {
+                if (this.activeConn && this.activeConn.open) return;
+                const conn = clientPeer.connect('storm-stars-pad-' + this.roomCode, { reliable: true });
+                conn.on('open', () => {
+                  this.activeConn = conn;
+                  conn.send({ type: 'hello', t: Date.now() });
+                  this.updateControllerStatus(true);
+                  if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([40, 60, 40]);
+                });
+                conn.on('data', (data) => this.handleControllerIncoming(data));
+                conn.on('close', () => {
+                  this.activeConn = null;
+                  this.updateControllerStatus(false);
+                  setTimeout(attemptConnect, 2000);
+                });
+                conn.on('error', () => {
+                  this.activeConn = null;
+                  this.updateControllerStatus(false);
+                });
+              };
+              attemptConnect();
             });
           } catch (e) {
             console.warn('PeerJS Client init error:', e);
           }
-        }
+        };
+        connectPeerJS();
 
         this.setupControllerTouchEvents();
 
@@ -5671,8 +5695,13 @@ function draw3DProjectile(pr) {
 
       updateControllerStatus(connected) {
         const dot = document.getElementById('padConnDot');
+        const lbl = document.getElementById('padConnStatusLabel');
         if (dot) {
-          dot.className = connected ? 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse' : 'w-2.5 h-2.5 rounded-full bg-rose-500';
+          dot.className = connected ? 'w-3 h-3 rounded-full bg-emerald-400 animate-pulse' : 'w-3 h-3 rounded-full bg-amber-400 animate-pulse';
+        }
+        if (lbl) {
+          lbl.textContent = connected ? '🟢 ПК подключён' : 'Поиск ПК...';
+          lbl.className = connected ? 'text-[11px] font-bold text-emerald-300' : 'text-[11px] font-bold text-amber-300';
         }
       },
 
