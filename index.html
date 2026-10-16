@@ -330,6 +330,13 @@
         </div>
       </div>
 
+      <!-- Tactical Progression Hint Banner -->
+      <div id="hudTacticalHint" class="hidden px-1 pointer-events-auto">
+        <div class="hud-pill px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-black text-cyan-200 border border-cyan-400/50 shadow-[0_0_12px_rgba(56,189,248,0.3)] flex items-center gap-1.5 transition-all">
+          <span id="lblTacticalHint"></span>
+        </div>
+      </div>
+
       <!-- Second Slim Row -->
       <div id="gameHudTop" class="flex items-center justify-between px-1 pointer-events-auto flex-wrap gap-1">
         <div class="flex items-center gap-1.5 flex-wrap">
@@ -889,13 +896,13 @@
           🚙 Доминатор МК-1: Ранг 1 (🏆 8)
         </div>
 
-        <!-- Buttons -->
+        <!-- Buttons (with Gamepad Shortcuts) -->
         <div class="flex items-center gap-2 w-full mt-2.5">
           <button id="btnVicNextLvl" type="button" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-slate-950 font-black text-xs sm:text-sm shadow-lg active:scale-95 transition">
-            Следующий Уровень ▶
+            🟢 [A / ПРОБЕЛ] Следующий Уровень ▶
           </button>
-          <button id="btnVicToGarage" type="button" class="px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs active:scale-95 transition">
-            🛒 Гараж
+          <button id="btnVicToGarage" type="button" class="px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs active:scale-95 transition flex items-center justify-center gap-1.5">
+            🟡 [Y] 🛒 Гараж / Лаб
           </button>
         </div>
       </div>
@@ -912,10 +919,10 @@
         <p class="text-xs text-slate-400 mb-4">Смерч поглотил ваш броневик. Прокачайте Силу или ЭМИ-Броню в лаборатории!</p>
         <div class="flex items-center gap-2 w-full">
           <button id="btnDefeatRetry" type="button" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs active:scale-95 transition">
-            ↺ Попробовать снова
+            🔴 [A / ПРОБЕЛ] ↺ Попробовать снова
           </button>
           <button id="btnDefeatGarage" type="button" class="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs active:scale-95 transition">
-            🛒 В Гараж / Лабораторию
+            🟡 [Y] 🛒 В Гараж
           </button>
         </div>
       </div>
@@ -1673,11 +1680,45 @@ function generateLevelConfig(lvl) {
     desc = 'Стремительные вихри и падающие каменные глыбы';
   }
 
-  const tornadoCount = isLevel100 ? 4 : (isBoss ? 1 : Math.min(6, 1 + Math.floor(lvl / 18)));
-  const volcanoCount = Math.min(5, Math.floor(lvl / 20));
-  const bumperCount = 4 + (lvl % 4);
-  const boulderCount = 5 + Math.min(10, Math.floor(lvl / 10));
-  const towerCount = 2 + Math.min(4, Math.floor(lvl / 25));
+  let tornadoCount, volcanoCount, bumperCount, boulderCount, towerCount;
+
+  if (lvl === 1) {
+    // Pure Minimalist Level 1: Open field, solitary tornado, ZERO obstacles!
+    tornadoCount = 1;
+    volcanoCount = 0;
+    bumperCount = 0;
+    boulderCount = 0;
+    towerCount = 0;
+  } else if (lvl === 2) {
+    // Minimalist Level 2: 1 normal + 1 dasher tornado, clean steppe field!
+    tornadoCount = 2;
+    volcanoCount = 0;
+    bumperCount = 0;
+    boulderCount = 0;
+    towerCount = 0;
+  } else if (lvl <= 5) {
+    // Levels 3-5: Introduce 2 boulders and 2 bumpers, clean and uncluttered
+    tornadoCount = 2;
+    volcanoCount = 0;
+    bumperCount = 2;
+    boulderCount = 2;
+    towerCount = 0;
+  } else if (lvl <= 9) {
+    // Levels 6-9: Introduce radar towers and 1 volcano
+    tornadoCount = 2;
+    volcanoCount = 1;
+    bumperCount = 3;
+    boulderCount = 3;
+    towerCount = 2;
+  } else {
+    // Levels 10+: Full dynamic scaling up to Level 100
+    tornadoCount = isLevel100 ? 4 : (isBoss ? 1 : Math.min(6, 1 + Math.floor(lvl / 18)));
+    volcanoCount = Math.min(5, Math.floor(lvl / 20));
+    bumperCount = 4 + (lvl % 4);
+    boulderCount = 5 + Math.min(10, Math.floor(lvl / 10));
+    towerCount = 2 + Math.min(4, Math.floor(lvl / 25));
+  }
+
   const targetKills = isLevel100 ? 5 : (isBoss ? 1 : Math.min(10, 2 + Math.floor(lvl / 12)));
   const timeLimitSec = isLevel100 ? 150 : (isBoss ? 120 : 90);
 
@@ -3478,6 +3519,7 @@ function draw3DProjectile(pr) {
       pickups = [];
       projectiles = [];
       groundProbes = [];
+      faradayCages = [];
       particles = [];
       floatingTexts = [];
       shockwaves = [];
@@ -3488,7 +3530,9 @@ function draw3DProjectile(pr) {
       for (let i = 0; i < currentConfig.tornadoCount; i++) {
         const isBoss = currentConfig.isBoss && i === 0;
         const isLvl100 = currentConfig.isLevel100 && i === 0;
-        const kind = isLvl100 ? 'omega_boss' : (isBoss ? 'boss' : (i % 3 === 0 ? 'shooter' : (i % 3 === 1 ? 'dasher' : 'normal')));
+        let kind = isLvl100 ? 'omega_boss' : (isBoss ? 'boss' : (i % 3 === 0 ? 'shooter' : (i % 3 === 1 ? 'dasher' : 'normal')));
+        if (currentConfig.level === 1) kind = 'normal';
+        else if (currentConfig.level === 2) kind = (i === 0) ? 'normal' : 'dasher';
         const coreR = isLvl100 ? 58 : (isBoss ? 48 : (kind === 'shooter' ? 32 : (kind === 'dasher' ? 28 : 34)));
         const baseHp = isLvl100 ? 18000 : (isBoss ? 9500 : (1600 + currentConfig.level * 65));
 
@@ -3634,6 +3678,53 @@ function draw3DProjectile(pr) {
     }
 
     // Authentic Storm Chaser Deployed Ground Probe / Tether Trap
+
+    // Faraday Cage active energy fields
+    let faradayCages = [];
+    let modalOpenedAt = 0;
+
+    // Point in triangle geometry test
+    function isPointInTriangle(px, py, x1, y1, x2, y2, x3, y3) {
+      const d1 = (px - x2) * (y1 - y2) - (x1 - x2) * (py - y2);
+      const d2 = (px - x3) * (y2 - y3) - (x2 - x3) * (py - y3);
+      const d3 = (px - x1) * (y3 - y1) - (x3 - x1) * (py - y1);
+      const hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+      const hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+      return !(hasNeg && hasPos);
+    }
+
+    // Zero-Mouse Gamepad & Keyboard Modal Transitions
+    function handleModalGamepadAction(actionType) {
+      // 600ms grace cooldown to prevent accidental skips from held fire button
+      if (performance.now() - modalOpenedAt < 600) return false;
+
+      const vicModal = document.getElementById('victoryModal');
+      const defModal = document.getElementById('defeatModal');
+
+      const isVicOpen = vicModal && !vicModal.classList.contains('hidden');
+      const isDefOpen = defModal && !defModal.classList.contains('hidden');
+
+      if (!isVicOpen && !isDefOpen) return false;
+
+      if (actionType === 'confirm') {
+        if (isVicOpen) {
+          const btnNext = document.getElementById('btnVicNextLvl');
+          if (btnNext) btnNext.click();
+          return true;
+        } else if (isDefOpen) {
+          const btnRetry = document.getElementById('btnDefeatRetry');
+          if (btnRetry) btnRetry.click();
+          return true;
+        }
+      } else if (actionType === 'garage') {
+        if (isVicOpen) vicModal.classList.add('hidden');
+        if (isDefOpen) defModal.classList.add('hidden');
+        openGarage('lab');
+        return true;
+      }
+      return false;
+    }
+
     function deployGroundProbeBehindCar() {
       if (!player || player.ammo < 1.0) return;
       player.ammo -= 1.0;
@@ -3892,6 +3983,20 @@ function draw3DProjectile(pr) {
     window.addEventListener('keydown', (e) => {
       keys[e.key.toLowerCase()] = true;
       keys[e.code] = true;
+
+      // 0. Space / Enter / KeyY / KeyG for Modal Navigation without mouse!
+      if (e.code === 'Space' || e.code === 'Enter' || e.key === ' ') {
+        if (handleModalGamepadAction('confirm')) {
+          e.preventDefault();
+          return;
+        }
+      }
+      if (e.code === 'KeyY' || e.code === 'KeyG' || e.key.toLowerCase() === 'y' || e.key.toLowerCase() === 'g') {
+        if (handleModalGamepadAction('garage')) {
+          e.preventDefault();
+          return;
+        }
+      }
 
       // 1. Space uses active probeMode (by default drops ground probe trap behind car!)
       if (e.code === 'Space' || e.key === ' ') {
@@ -4325,7 +4430,26 @@ function draw3DProjectile(pr) {
         if (tor.stasisTimer > 0) {
           tor.stasisTimer -= dt;
         }
-        const effectiveSpeedMult = (tor.stasisTimer > 0) ? (tor.stasisSlow || 0.72) : 1.0;
+        let effectiveSpeedMult = (tor.stasisTimer > 0) ? (tor.stasisSlow || 0.72) : 1.0;
+
+        // Bola Tether Wrap (🪝 Грави-Аркан из 2-х Зондов)
+        if (tor.bolaTimer > 0) {
+          tor.bolaTimer -= dt;
+          tor.bolaDmgTick = (tor.bolaDmgTick || 0) + dt;
+          tor.bolaAngle = (tor.bolaAngle || 0) + 14 * dt;
+          effectiveSpeedMult *= 0.60; // -40% pull force and speed
+
+          if (tor.bolaDmgTick >= 0.5) {
+            tor.bolaDmgTick = 0;
+            const dmgBonus = 1 + (saveState.lab.overchargeCore || 0) * 0.07 + player.powerCubes * 0.12;
+            const bolaDmg = Math.round(spec.bulletDmg * dmgBonus * 0.45);
+            tor.hp -= bolaDmg;
+            tor.hitFlash = 0.18;
+            spawnDamageNumber(`🪝 АРКАН СЖАТИЯ -${bolaDmg}!`, tor.x, tor.y - 20, '#fbbf24', true);
+            spawnShockwave(tor.x, tor.y, '#f59e0b', 75);
+            if (Math.random() < 0.45) spawnPickup('cube', tor.x, tor.y);
+          }
+        }
 
         tor.x += tor.vx * effectiveSpeedMult * dt;
         tor.y += tor.vy * effectiveSpeedMult * dt;
@@ -4460,19 +4584,169 @@ function draw3DProjectile(pr) {
         }
       });
 
-      // Tether Chain Bonus: pairs within 240px detonate with +35% Chain Overload
-      for (let i = 0; i < groundProbes.length; i++) {
-        for (let j = i + 1; j < groundProbes.length; j++) {
-          const p1 = groundProbes[i];
-          const p2 = groundProbes[j];
-          if (!p1.isArmed || !p2.isArmed || p1.detonated || p2.detonated || p1.isSucked || p2.isSucked) continue;
+      // Active Faraday Cages Update (⚡ 3-Probe Faraday Stasis Prism)
+      faradayCages.forEach((fc) => {
+        fc.timer -= dt;
+        fc.lightningTimer -= dt;
+
+        if (fc.tornado && fc.tornado.hp > 0) {
+          fc.tornado.vx *= 0.15;
+          fc.tornado.vy *= 0.15;
+          fc.tornado.x += (fc.cx - fc.tornado.x) * 4.0 * dt;
+          fc.tornado.y += (fc.cy - fc.tornado.y) * 4.0 * dt;
+          fc.tornado.stasisTimer = Math.max(fc.tornado.stasisTimer || 0, 1.0);
+          fc.tornado.stasisSlow = 0.2;
+
+          if (fc.lightningTimer <= 0) {
+            fc.lightningTimer = 0.6;
+            const dmgBonus = 1 + (saveState.lab.overchargeCore || 0) * 0.07 + player.powerCubes * 0.12;
+            const cageDmg = Math.round(spec.bulletDmg * dmgBonus * 0.85);
+            fc.tornado.hp -= cageDmg;
+            fc.tornado.hitFlash = 0.25;
+            screenShake = Math.max(screenShake, 14);
+            triggerLightningStrike(fc.tornado.x, fc.tornado.y);
+            spawnDamageNumber(`⚡ КЛЕТКА ФАРАДЕЯ -${cageDmg}!`, fc.tornado.x, fc.tornado.y - 22, '#67e8f9', true);
+            spawnPickup('coin', fc.tornado.x + (Math.random() - 0.5) * 35, fc.tornado.y + (Math.random() - 0.5) * 35);
+            SoundEngine.playThunder(1.3, fc.tornado.x, fc.tornado.y);
+          }
+        }
+      });
+      faradayCages = faradayCages.filter(fc => fc.timer > 0);
+
+      // Multi-Probe Geometric Traps (4-Probe Singularity, 3-Probe Faraday, 2-Probe Bola)
+      const armedProbes = groundProbes.filter(p => p.isArmed && !p.detonated && !p.isSucked);
+
+      // 4-Probe Quad Singularity Collapse (💠 Сингулярный Контур из 4-х Зондов)
+      if (armedProbes.length >= 4) {
+        for (let i = 0; i < armedProbes.length; i++) {
+          for (let j = i + 1; j < armedProbes.length; j++) {
+            for (let k = j + 1; k < armedProbes.length; k++) {
+              for (let m = k + 1; m < armedProbes.length; m++) {
+                const p1 = armedProbes[i], p2 = armedProbes[j], p3 = armedProbes[k], p4 = armedProbes[m];
+                if (p1.detonated || p2.detonated || p3.detonated || p4.detonated) continue;
+
+                const qx = (p1.x + p2.x + p3.x + p4.x) / 4;
+                const qy = (p1.y + p2.y + p3.y + p4.y) / 4;
+
+                let tornadoNear = false;
+                tornadoes.forEach(tor => {
+                  if (Math.hypot(tor.x - qx, tor.y - qy) < 240) tornadoNear = true;
+                });
+
+                if (tornadoNear) {
+                  p1.detonated = true; p2.detonated = true; p3.detonated = true; p4.detonated = true;
+
+                  const dmgBonus = 1 + (saveState.lab.overchargeCore || 0) * 0.07 + player.powerCubes * 0.12;
+                  const singDmg = Math.round(spec.bulletDmg * dmgBonus * 3.0);
+
+                  tornadoes.forEach(tor => {
+                    const d = Math.hypot(tor.x - qx, tor.y - qy);
+                    if (d < 380) {
+                      tor.x += (qx - tor.x) * 0.65;
+                      tor.y += (qy - tor.y) * 0.65;
+                      tor.hp -= singDmg;
+                      tor.hitFlash = 0.4;
+                      tor.stasisTimer = 3.2;
+                      tor.stasisSlow = 0.4;
+                      spawnDamageNumber(`💠 СИНГУЛЯРНЫЙ КОЛЛАПС -${singDmg}!`, tor.x, tor.y - 25, '#c084fc', true, 20);
+                    }
+                  });
+
+                  spawnShockwave(qx, qy, '#c084fc', 280);
+                  spawnShockwave(qx, qy, '#fde047', 160);
+                  hitStopTimer = 0.09;
+                  screenShake = Math.max(screenShake, 28);
+                  lightningFlash = 1.0;
+
+                  player.superCharge = Math.min(100, player.superCharge + 50);
+                  saveState.telemetryChips = (saveState.telemetryChips || 0) + 4;
+                  writeSaveData();
+                  syncHUD();
+                  showToast('💠 СИНГУЛЯРНЫЙ КОЛЛАПС x3.0! +4 Чипа телеметрии!');
+                  SoundEngine.playSuper('volt');
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // 3-Probe Triangular Faraday Stasis Cage (🔺 Треугольная Клетка Фарадея из 3-х Зондов)
+      if (armedProbes.length >= 3) {
+        for (let i = 0; i < armedProbes.length; i++) {
+          for (let j = i + 1; j < armedProbes.length; j++) {
+            for (let k = j + 1; k < armedProbes.length; k++) {
+              const p1 = armedProbes[i], p2 = armedProbes[j], p3 = armedProbes[k];
+              if (p1.detonated || p2.detonated || p3.detonated) continue;
+
+              const d12 = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+              const d23 = Math.hypot(p3.x - p2.x, p3.y - p2.y);
+              const d31 = Math.hypot(p1.x - p3.x, p1.y - p3.y);
+
+              if (d12 < 340 && d23 < 340 && d31 < 340) {
+                const cx = (p1.x + p2.x + p3.x) / 3;
+                const cy = (p1.y + p2.y + p3.y) / 3;
+
+                tornadoes.forEach(tor => {
+                  if (isPointInTriangle(tor.x, tor.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y) || Math.hypot(tor.x - cx, tor.y - cy) < 48) {
+                    p1.detonated = true;
+                    p2.detonated = true;
+                    p3.detonated = true;
+
+                    faradayCages.push({
+                      x1: p1.x, y1: p1.y,
+                      x2: p2.x, y2: p2.y,
+                      x3: p3.x, y3: p3.y,
+                      cx, cy,
+                      timer: 3.5,
+                      lightningTimer: 0.1,
+                      tornado: tor
+                    });
+
+                    const dmgBonus = 1 + (saveState.lab.overchargeCore || 0) * 0.07 + player.powerCubes * 0.12;
+                    const cageInitDmg = Math.round(spec.bulletDmg * dmgBonus * 1.5);
+                    tor.hp -= cageInitDmg;
+                    tor.hitFlash = 0.3;
+
+                    hitStopTimer = 0.08;
+                    screenShake = Math.max(screenShake, 24);
+                    lightningFlash = 0.95;
+
+                    spawnDamageNumber(`🔺 КЛЕТКА ФАРАДЕЯ -${cageInitDmg}!`, tor.x, tor.y - 25, '#38bdf8', true, 18);
+                    spawnShockwave(cx, cy, '#38bdf8', 200);
+
+                    player.superCharge = Math.min(100, player.superCharge + 35);
+                    saveState.telemetryChips = (saveState.telemetryChips || 0) + 3;
+                    writeSaveData();
+                    syncHUD();
+                    showToast('🔺 КЛЕТКА ФАРАДЕЯ ЗАМКНУТА! +3 Чипа телеметрии!');
+                    SoundEngine.playSuper('volt');
+                  }
+                });
+              }
+            }
+          }
+        }
+      }
+
+      // 2-Probe Bola Tether Wrap (🪝 Грави-Аркан из 2-х Зондов)
+      for (let i = 0; i < armedProbes.length; i++) {
+        for (let j = i + 1; j < armedProbes.length; j++) {
+          const p1 = armedProbes[i];
+          const p2 = armedProbes[j];
+          if (p1.detonated || p2.detonated) continue;
 
           const pDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-          if (pDist <= 240) {
+          if (pDist <= 280) {
             tornadoes.forEach((tor) => {
               if (distToSegment(tor.x, tor.y, p1.x, p1.y, p2.x, p2.y) < tor.coreRadius * 0.95) {
                 p1.detonated = true;
                 p2.detonated = true;
+
+                // Latch Bola Tether onto tornado
+                tor.bolaTimer = 4.0;
+                tor.bolaDmgTick = 0;
+                tor.bolaAngle = Math.random() * Math.PI * 2;
 
                 const dmgBonus = 1 + (saveState.lab.overchargeCore || 0) * 0.07 + player.powerCubes * 0.12;
                 const chainDmg = Math.round(spec.bulletDmg * dmgBonus * 1.75 * 1.35);
@@ -4486,7 +4760,7 @@ function draw3DProjectile(pr) {
                 screenShake = Math.max(screenShake, 22);
                 lightningFlash = 0.9;
 
-                spawnDamageNumber(`🔗 ЦЕПНОЙ РАЗРЯД -${chainDmg}!`, tor.x, tor.y - 25, '#fde047', true);
+                spawnDamageNumber(`🪝 ГРАВИ-АРКАН -${chainDmg}!`, tor.x, tor.y - 25, '#fde047', true);
                 spawnShockwave(p1.x, p1.y, '#38bdf8', 140);
                 spawnShockwave(p2.x, p2.y, '#38bdf8', 140);
 
@@ -4494,7 +4768,7 @@ function draw3DProjectile(pr) {
                 saveState.telemetryChips = (saveState.telemetryChips || 0) + 3;
                 writeSaveData();
                 syncHUD();
-                showToast('🔗 ЦЕПНОЙ РАЗРЯД! +3 Чипа телеметрии!');
+                showToast('🪝 ГРАВИ-АРКАН ЗАХВАЧЕН! +3 Чипа телеметрии!');
                 SoundEngine.playSuper('volt');
               }
             });
@@ -4520,6 +4794,52 @@ function draw3DProjectile(pr) {
           pr.trail.push({ x: pr.x, y: pr.y, z: pr.z || 0 });
           if (pr.trail.length > 8) pr.trail.shift();
         }
+
+        // Active Shoot-to-Detonate Combo: Forward shot hitting armed groundProbe
+        groundProbes.forEach((gp) => {
+          if (gp.isArmed && !gp.detonated && !gp.isSucked && pr.life > 0) {
+            const dProbe = Math.hypot(gp.x - pr.x, gp.y - pr.y);
+            if (dProbe < 32) {
+              pr.life = 0; // Consume projectile
+              gp.detonated = true;
+
+              // Detonate tethered probes within 280px too
+              const tethered = groundProbes.filter(p2 => p2 !== gp && p2.isArmed && !p2.detonated && Math.hypot(p2.x - gp.x, p2.y - gp.y) < 280);
+              tethered.forEach(p2 => { p2.detonated = true; spawnShockwave(p2.x, p2.y, '#38bdf8', 120); });
+
+              // Huge 160px EMP Nova shockwave
+              const dmgBonus = 1 + (saveState.lab.overchargeCore || 0) * 0.07 + player.powerCubes * 0.12;
+              const empDmg = Math.round(spec.bulletDmg * dmgBonus * 2.4);
+
+              spawnShockwave(gp.x, gp.y, '#38bdf8', 160);
+              spawnShockwave(gp.x, gp.y, '#ffffff', 90);
+              hitStopTimer = 0.08;
+              screenShake = Math.max(screenShake, 20);
+              lightningFlash = 0.85;
+
+              // Damage and stun all tornadoes within 160px
+              tornadoes.forEach((tor) => {
+                const dTor = Math.hypot(tor.x - gp.x, tor.y - gp.y);
+                if (dTor < 160 + tor.coreRadius) {
+                  tor.hp -= empDmg;
+                  tor.hitFlash = 0.35;
+                  tor.frozenTimer = 2.0; // 2.0s stun
+                  tor.stasisTimer = 2.5;
+                  tor.stasisSlow = 0.5;
+                  spawnDamageNumber(`💥 ЭМИ-ПОДРЫВ ЦЕПИ -${empDmg}!`, tor.x, tor.y - 25, '#38bdf8', true, 18);
+                  spawnPickup('coin', tor.x, tor.y);
+                }
+              });
+
+              player.superCharge = Math.min(100, player.superCharge + 30);
+              saveState.telemetryChips = (saveState.telemetryChips || 0) + 2;
+              writeSaveData();
+              syncHUD();
+              showToast('💥 ЭМИ-ПОДРЫВ ЦЕПИ! +2 Чипа телеметрии!');
+              SoundEngine.playSuper('dominator');
+            }
+          }
+        });
 
         tornadoes.forEach((tor) => {
           const d = Math.hypot(tor.x - pr.x, tor.y - pr.y);
@@ -4689,6 +5009,96 @@ function draw3DProjectile(pr) {
     // =========================================================================
 
     function drawGroundProbesAndTethers(nowSec) {
+      // 0. Render Active Faraday Cages (3D Energy Columns & Prisms)
+      if (faradayCages && faradayCages.length > 0) {
+        faradayCages.forEach((fc) => {
+          const pt1 = project3D(fc.x1, fc.y1, 0);
+          const pt2 = project3D(fc.x2, fc.y2, 0);
+          const pt3 = project3D(fc.x3, fc.y3, 0);
+          const top1 = project3D(fc.x1, fc.y1, 38);
+          const top2 = project3D(fc.x2, fc.y2, 38);
+          const top3 = project3D(fc.x3, fc.y3, 38);
+
+          ctx.save();
+          // Glowing floor field
+          ctx.beginPath();
+          ctx.moveTo(pt1.x, pt1.y);
+          ctx.lineTo(pt2.x, pt2.y);
+          ctx.lineTo(pt3.x, pt3.y);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.22)';
+          ctx.fill();
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+
+          // 3D Vertical Columns
+          ctx.strokeStyle = '#67e8f9';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(pt1.x, pt1.y); ctx.lineTo(top1.x, top1.y);
+          ctx.moveTo(pt2.x, pt2.y); ctx.lineTo(top2.x, top2.y);
+          ctx.moveTo(pt3.x, pt3.y); ctx.lineTo(top3.x, top3.y);
+          ctx.stroke();
+
+          // Top energy triangle
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(top1.x, top1.y);
+          ctx.lineTo(top2.x, top2.y);
+          ctx.lineTo(top3.x, top3.y);
+          ctx.closePath();
+          ctx.stroke();
+          ctx.restore();
+        });
+      }
+
+      // 0.1 Render Bola Tethers on Tornadoes
+      if (tornadoes && tornadoes.length > 0) {
+        tornadoes.forEach((tor) => {
+          if (tor.bolaTimer > 0) {
+            const bAngle = tor.bolaAngle || 0;
+            const bDist = tor.coreRadius + 14;
+            const ox1 = tor.x + Math.cos(bAngle) * bDist;
+            const oy1 = tor.y + Math.sin(bAngle) * bDist;
+            const ox2 = tor.x - Math.cos(bAngle) * bDist;
+            const oy2 = tor.y - Math.sin(bAngle) * bDist;
+
+            const pt1 = project3D(ox1, oy1, 14);
+            const pt2 = project3D(ox2, oy2, 14);
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            // Constricting glowing cable
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(pt1.x, pt1.y);
+            ctx.lineTo(pt2.x, pt2.y);
+            ctx.stroke();
+
+            // Core electric wire
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // 2 Orbiting Anchor Orbs
+            [pt1, pt2].forEach((pt) => {
+              ctx.fillStyle = '#f59e0b';
+              ctx.beginPath();
+              ctx.arc(pt.x, pt.y, 6 * (pt.scale || 1), 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#ffffff';
+              ctx.beginPath();
+              ctx.arc(pt.x, pt.y, 2.5 * (pt.scale || 1), 0, Math.PI * 2);
+              ctx.fill();
+            });
+            ctx.restore();
+          }
+        });
+      }
+
       if (!groundProbes || groundProbes.length === 0) return;
 
       // 1. Draw glowing 3D Plasma Laser Tether Beams between pairs within 240px
@@ -5568,6 +5978,25 @@ function draw3DProjectile(pr) {
         btnHandLeft.className = (isLeft) ? 'p-2 rounded-xl border border-amber-400 bg-amber-950/70 text-amber-200 font-bold text-left shadow-sm' : 'p-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-left';
       }
 
+      // Tactical Progression Hint Banner Sync
+      const hudTacticalHint = document.getElementById('hudTacticalHint');
+      const lblTacticalHint = document.getElementById('lblTacticalHint');
+      if (hudTacticalHint && lblTacticalHint) {
+        const lvl = (saveState && saveState.currentLevel) || 1;
+        let hintText = '';
+        if (lvl <= 2) {
+          hintText = '📡 УР. 1–2 МИНИМАЛИЗМ: Оставь 1 Сейсмо-Зонд [💣] на пути смерча или свяжи 2 зонда в Грави-Аркан!';
+        } else if (lvl <= 5) {
+          hintText = '🪝 УР. 3–5 ДУЭТ ЗОНДОВ: 2 зонда рядом свяжут смерч вращающимся Грави-Арканом (-40% силы смерча)!';
+        } else if (lvl <= 9) {
+          hintText = '🔺 УР. 6–9 КЛЕТКА ФАРАДЕЯ: Поставь 3 зонда треугольником вокруг смерча — замкни Стазис-Купол с молниями!';
+        } else {
+          hintText = '💠 МАСТЕР ЛОВУШЕК: 4 зонда = Сингулярный Коллапс! Выстрел [🎯] в зонд = Ручной ЭМИ-подрыв цепи!';
+        }
+        lblTacticalHint.textContent = hintText;
+        hudTacticalHint.classList.remove('hidden');
+      }
+
       // Handheld Console Gamepad Mode (2 РУКИ) Sync
       const isConsolePad = Boolean(saveState.settings && saveState.settings.consolePadMode);
       const btnToggleConsolePad = document.getElementById('btnToggleConsolePad');
@@ -5653,6 +6082,7 @@ function draw3DProjectile(pr) {
     // Victory & Defeat Modals
     function showVictoryModal() {
       isGamePaused = true;
+      modalOpenedAt = performance.now();
       SoundEngine.stopLoops();
       SoundEngine.playVictory();
 
@@ -5693,15 +6123,22 @@ function draw3DProjectile(pr) {
         lblStats.innerHTML = `Время: <b class="text-white">${Math.round(timeTaken)}с</b> | Награда: <b class="text-amber-400">+${rewardCoins}🪙</b>, <b class="text-cyan-300">+${rewardChips}🧬</b>`;
       }
       if (modal) modal.classList.remove('hidden');
+      if (typeof GamepadEngine !== 'undefined' && GamepadEngine.sendTelemetry) {
+        GamepadEngine.sendTelemetry();
+      }
     }
 
     function showDefeatModal() {
       isGamePaused = true;
+      modalOpenedAt = performance.now();
       SoundEngine.stopLoops();
       SoundEngine.playDefeat();
 
       const modal = document.getElementById('defeatModal');
       if (modal) modal.classList.remove('hidden');
+      if (typeof GamepadEngine !== 'undefined' && GamepadEngine.sendTelemetry) {
+        GamepadEngine.sendTelemetry();
+      }
     }
 
     // 4-Tab Garage Navigation & Modal Renderer
@@ -6365,7 +6802,16 @@ function draw3DProjectile(pr) {
             virtualJoystick.dx = Math.max(-1, Math.min(1, virtualJoystick.dx + pkt.gyroSteer));
           }
 
-          // Action Triggers: Both Trap and Shoot
+          // Action Triggers: Support Victory/Defeat Advance without mouse!
+          if (isGamePaused) {
+            if (pkt.trap || pkt.shoot || pkt.turbo) {
+              if (handleModalGamepadAction('confirm')) return;
+            }
+            if (pkt.superBtn) {
+              if (handleModalGamepadAction('garage')) return;
+            }
+          }
+
           if (pkt.trap) deployGroundProbeBehindCar();
           if (pkt.shoot) fireMainAttackProbe();
           if (pkt.turbo) activateGadgetTurbo();
@@ -6380,6 +6826,12 @@ function draw3DProjectile(pr) {
         this.lastTelemetryTime = now;
 
         const spec = getSelectedCarSpec();
+        const vicModal = document.getElementById('victoryModal');
+        const defModal = document.getElementById('defeatModal');
+        const isVicOpen = vicModal && !vicModal.classList.contains('hidden');
+        const isDefOpen = defModal && !defModal.classList.contains('hidden');
+        const currentGameState = !isGamePaused ? 'playing' : (isVicOpen ? 'victory' : (isDefOpen ? 'defeat' : 'paused'));
+
         const data = {
           type: 'telemetry',
           hp: Math.max(0, Math.round(player.hp)),
@@ -6390,6 +6842,7 @@ function draw3DProjectile(pr) {
           combo: comboCount,
           carName: spec.name,
           level: currentConfig ? currentConfig.level : 1,
+          gameState: currentGameState,
           t: now
         };
 
@@ -6568,6 +7021,24 @@ function draw3DProjectile(pr) {
               comboBadge.textContent = 'x' + msg.combo;
             } else {
               comboBadge.classList.add('hidden');
+            }
+          }
+
+          // GameState status banner on smartphone controller
+          const padStatus = document.getElementById('padConnStatusLabel');
+          if (padStatus && msg.gameState) {
+            if (msg.gameState === 'victory') {
+              padStatus.textContent = '🏆 ПОБЕДА! [A/⚡] СЛЕД.';
+              padStatus.className = 'text-[11px] font-black text-emerald-300 animate-pulse';
+            } else if (msg.gameState === 'defeat') {
+              padStatus.textContent = '💥 ПРОВАЛ! [A/⚡] ПОВТОР';
+              padStatus.className = 'text-[11px] font-black text-rose-400 animate-pulse';
+            } else if (msg.gameState === 'paused') {
+              padStatus.textContent = '⏸ ПАУЗА';
+              padStatus.className = 'text-[11px] font-bold text-amber-300';
+            } else {
+              padStatus.textContent = '🟢 В БОЮ';
+              padStatus.className = 'text-[11px] font-bold text-emerald-400';
             }
           }
         }
@@ -6973,17 +7444,29 @@ function draw3DProjectile(pr) {
         btn.addEventListener('pointerleave', stopAction);
       }
 
-      // Trap (Bottom A) - Auto-repeat while held
-      setupHoldButton('btnDeckTrap', () => deployGroundProbeBehindCar(), 160, 25);
+      // Trap (Bottom A) - Auto-repeat while held or advance modal
+      setupHoldButton('btnDeckTrap', () => {
+        if (isGamePaused && handleModalGamepadAction('confirm')) return;
+        deployGroundProbeBehindCar();
+      }, 160, 25);
 
-      // Shoot (Left X) - Auto-repeat while held
-      setupHoldButton('btnDeckShoot', () => fireMainAttackProbe(), 160, 20);
+      // Shoot (Left X) - Auto-repeat while held or advance modal
+      setupHoldButton('btnDeckShoot', () => {
+        if (isGamePaused && handleModalGamepadAction('confirm')) return;
+        fireMainAttackProbe();
+      }, 160, 20);
 
-      // Turbo (Right B) - Single boost per tap
-      setupHoldButton('btnDeckTurbo', () => activateGadgetTurbo(), 0, 30);
+      // Turbo (Right B) - Single boost per tap or advance modal
+      setupHoldButton('btnDeckTurbo', () => {
+        if (isGamePaused && handleModalGamepadAction('confirm')) return;
+        activateGadgetTurbo();
+      }, 0, 30);
 
-      // Super (Top Y) - Single trigger per tap
-      setupHoldButton('btnDeckSuper', () => activateSuperAbility(), 0, 40);
+      // Super (Top Y) - Single trigger per tap or open garage in modal
+      setupHoldButton('btnDeckSuper', () => {
+        if (isGamePaused && handleModalGamepadAction('garage')) return;
+        activateSuperAbility();
+      }, 0, 40);
     }
 
     window.addEventListener('load', async () => {
