@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>B2B Каталог Мебели — Мобильный Буклет, Слайд-шоу и PDF</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --background: #f8fafc;
+      --foreground: #0f172a;
+      --card: #ffffff;
+      --secondary: #f1f5f9;
+      --muted-foreground: #64748b;
+      --primary: #2563eb;
+      --primary-foreground: #ffffff;
+      --border: #e2e8f0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #0f172a;
+        --foreground: #f8fafc;
+        --card: #1e293b;
+        --secondary: #334155;
+        --muted-foreground: #94a3b8;
+        --primary: #3b82f6;
+        --primary-foreground: #ffffff;
+        --border: #334155;
+      }
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 9999px; }
+    .soft-card {
+      box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.12), 0 2px 8px -2px rgba(0, 0, 0, 0.06);
+    }
+    .thumb-selected {
+      outline: 2.5px solid var(--primary);
+      outline-offset: 2px;
+    }
+    .slide-anim {
+      animation: slideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideIn {
+      from { opacity: 0.35; transform: scale(0.985); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* ПРОФЕССИОНАЛЬНАЯ ВЕРСТКА ДЛЯ ПЕЧАТИ И СОХРАНЕНИЯ В PDF (БЕЗ ИНТЕРНЕТА У ПОЛУЧАТЕЛЯ) */
+    #printBookletContainer { display: none; }
+    @media print {
+      @page { size: A4 landscape; margin: 8mm; }
+      body { background: #ffffff !important; color: #0f172a !important; padding: 0 !important; margin: 0 !important; }
+      #topHeader, #slideshowAnchor, main, #mobileBottomNav, #backToTopBtn, #editModal, #syncModal {
+        display: none !important;
+      }
+      #printBookletContainer {
+        display: block !important;
+        width: 100% !important;
+      }
+      .pdf-page {
+        page-break-after: always;
+        break-after: page;
+        border: 1px solid #cbd5e1;
+        border-radius: 14px;
+        padding: 14px;
+        background: #ffffff;
+        color: #0f172a;
+        height: 188mm;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .pdf-page:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] font-sans antialiased min-h-screen flex flex-col pb-20 sm:pb-10">
+
+  <!-- КОМПАКТНАЯ ДРУЖЕЛЮБНАЯ ВЕРХНЯЯ ПАНЕЛЬ (НЕ ПЕРЕКРЫВАЕТ ЭКРАН ПРИ СКРОЛЛЕ) -->
+  <header id="topHeader" class="bg-[var(--card)] border-b border-[var(--border)] px-3.5 sm:px-6 py-3">
+    <div class="max-w-5xl mx-auto space-y-3">
+
+      <!-- Строка 1: Бренд + Кнопки PDF / HTML / Живая синхронизация с Таблицей -->
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] flex items-center justify-center font-extrabold text-sm shrink-0 shadow-sm">
+            B2B
+          </div>
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <h1 class="text-sm sm:text-base font-bold truncate">Каталог стульев и столов</h1>
+              <span id="liveCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 font-semibold shrink-0">
+                В каталоге: 66 поз.
+              </span>
+              <span id="liveSyncStatus" class="text-xs px-2 py-0.5 rounded-full bg-[var(--secondary)] text-[var(--muted-foreground)] font-medium shrink-0">
+                ⚡ Связь с Таблицей
+              </span>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] truncate">
+              Галочки в столбце A Google Таблицы сразу включают/скрывают товары в HTML и PDF
+            </p>
+          </div>
+        </div>
+
+        <!-- КНОПКИ ВЕБ-ССЫЛКИ, СКАЧИВАНИЯ PDF-ФАЙЛА И HTML -->
+        <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+          <button onclick="downloadDirectPdfFile()" id="btnDirectPdf"
+                  title="Сгенерировать и сразу скачать готовый файл .PDF со всеми фото (работает без интернета на любом телефоне и ПК)"
+                  class="px-3 py-2 rounded-xl text-xs font-extrabold bg-rose-600 text-white hover:opacity-90 active:scale-95 transition cursor-pointer shadow-sm flex items-center gap-1.5">
+            <span id="btnDirectPdfLabel">📥 Скачать PDF-файл</span>
+          </button>
+
+          <button onclick="downloadPdfBooklet()"
+                  title="Быстрая печать / сохранение PDF через системное окно браузера"
+                  class="px-2.5 py-2 rounded-xl text-xs font-bold bg-rose-500/15 text-rose-500 border border-rose-500/30 hover:bg-rose-600 hover:text-white active:scale-95 transition cursor-pointer">
+            🖨️ <span class="hidden lg:inline">Печать PDF</span>
+          </button>
+
+          <button onclick="copyWebCatalogUrl()" id="btnShareWeb"
+                  title="Скопировать публичную веб-ссылку на этот онлайн-каталог для отправки в WhatsApp / Telegram"
+                  class="px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:opacity-90 active:scale-95 transition cursor-pointer shadow-sm">
+            🌐 <span id="btnShareWebLabel">Веб-ссылка</span>
+          </button>
+
+          <button onclick="downloadStandaloneHtml()"
+                  title="Скачать автономный HTML-файл со всеми фото для пересылки"
+                  class="px-2.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:opacity-90 active:scale-95 transition cursor-pointer shadow-sm">
+            💾 <span class="hidden sm:inline">HTML</span>
+          </button>
+
+          <button onclick="syncFromGoogleSheetLive(true)"
+                  title="Мгновенно подтянуть галочки (Столбец A), названия и новые фото из Google Таблицы и папок"
+                  class="px-2.5 py-2 rounded-xl text-xs font-bold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)] active:scale-95 transition cursor-pointer">
+            🔄
+          </button>
+
+          <button onclick="openSyncModal()"
+                  title="Настройки синхронизации папок Google Диска и Таблицы"
+                  class="px-2.5 py-2 rounded-xl text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] hover:opacity-90 cursor-pointer">
+            ⚙️
+          </button>
+        </div>
+      </div>
+
+      <!-- Строка 2: Большой удобный переключатель режимов (Слайд-шоу / Лента) -->
+      <div class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-[var(--secondary)] border border-[var(--border)]">
+        <button onclick="setViewMode('slideshow', true)" id="mode-slideshow"
+                class="py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm">
+          <span>🎬 Слайд-шоу (по 1 товару)</span>
+        </button>
+        <button onclick="setViewMode('scroll', false)" id="mode-scroll"
+                class="py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+          <span>📜 Лента сверху вниз</span>
+        </button>
+      </div>
+
+      <!-- Строка 3: Фильтры категорий + Поиск -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 sm:pb-0">
+          <button onclick="setCategory('all')" id="tab-all"
+                  class="px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition cursor-pointer bg-[var(--primary)] text-[var(--primary-foreground)]">
+            Все (<span id="count-all">66</span>)
+          </button>
+          <button onclick="setCategory('chairs')" id="tab-chairs"
+                  class="px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition cursor-pointer bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+            🪑 Стулья (<span id="count-chairs">36</span>)
+          </button>
+          <button onclick="setCategory('tables')" id="tab-tables"
+                  class="px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition cursor-pointer bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+            🍽️ Столы (<span id="count-tables">30</span>)
+          </button>
+        </div>
+
+        <div class="relative flex-1 sm:max-w-xs">
+          <input id="searchInput" type="search" oninput="handleSearch(this.value)"
+                 placeholder="🔍 Поиск: 001, Стол 04, велюр, 496..."
+                 class="w-full px-3.5 py-1.5 rounded-xl text-xs bg-[var(--secondary)] text-[var(--foreground)] placeholder-[var(--muted-foreground)] border border-[var(--border)] focus:outline-none focus:border-[var(--primary)]" />
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ЯКОРЬ ДЛЯ МГНОВЕННОЙ ПРОКРУТКИ К СЛАЙД-ШОУ -->
+  <div id="slideshowAnchor"></div>
+
+  <!-- ОСНОВНОЙ КОНТЕЙНЕР -->
+  <main class="max-w-5xl w-full mx-auto px-3 sm:px-6 pt-3 pb-6 flex-1 flex flex-col">
+
+    <!-- РЕЖИМ 1: СЛАЙД-ШОУ (МОБИЛЬНО-ОРИЕНТИРОВАННЫЙ СЛАЙД + АВТОПЛЕЙ + СВАЙПЫ) -->
+    <div id="catalogSlideshow" class="flex-1 flex flex-col"></div>
+
+    <!-- РЕЖИМ 2: СПЛОШНАЯ ЛЕНТА СВЕРХУ ВНИЗ -->
+    <div id="catalogScroll" class="hidden space-y-4"></div>
+
+  </main>
+
+  <!-- КОНТЕЙНЕР ДЛЯ ФОРМИРОВАНИЯ МНОГОСТРАНИЧНОГО PDF-БУКЛЕТА (1 ТОВАР НА ЛИСТ A4 С 4 ФОТО) -->
+  <div id="printBookletContainer"></div>
+
+  <!-- МОДАЛЬНОЕ ОКНО ПРОГРЕССА СКАЧИВАНИЯ ПРЯМОГО PDF-ФАЙЛА -->
+  <div id="pdfProgressModal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl text-center">
+      <div class="w-12 h-12 rounded-2xl bg-rose-600/15 text-rose-500 flex items-center justify-center text-2xl mx-auto font-bold">
+        📄
+      </div>
+      <div>
+        <h3 id="pdfProgressTitle" class="text-base font-extrabold">Формируем офлайн PDF-буклет...</h3>
+        <p id="pdfProgressSub" class="text-xs text-[var(--muted-foreground)] mt-1">
+          Подгружаем фотографии и верстаем страницы A4 (1 товар = 1 слайд с 4 фото)
+        </p>
+      </div>
+      <div class="w-full h-3 rounded-full bg-[var(--secondary)] overflow-hidden border border-[var(--border)]">
+        <div id="pdfProgressBar" class="h-full bg-rose-600 transition-all duration-200" style="width: 5%"></div>
+      </div>
+      <div id="pdfProgressStep" class="text-xs font-mono font-bold text-[var(--primary)]">Подготовка...</div>
+      <div class="pt-1 flex items-center justify-center gap-2">
+        <button onclick="cancelDirectPdf()" class="px-4 py-2 rounded-xl text-xs font-bold bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] cursor-pointer">
+          Отмена
+        </button>
+        <button onclick="cancelDirectPdf(); downloadPdfBooklet();" class="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600/15 text-rose-500 hover:bg-rose-600 hover:text-white cursor-pointer">
+          🖨️ Быстрое сохранение через окно печати
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОБИЛЬНЫЙ НИЖНИЙ ДОК НАВИГАЦИИ (УДОБНО ДЛЯ БОЛЬШОГО ПАЛЬЦА НА ТЕЛЕФОНЕ) -->
+  <nav id="mobileBottomNav" class="fixed bottom-0 inset-x-0 z-30 sm:hidden bg-[var(--card)]/95 backdrop-blur border-t border-[var(--border)] px-3 py-2 flex items-center justify-between gap-2">
+    <button onclick="goToSlide(slideIndex - 1)"
+            class="px-3.5 py-2 rounded-xl text-xs font-bold bg-[var(--secondary)] border border-[var(--border)] active:scale-95 cursor-pointer">
+      ◀ Назад
+    </button>
+    <button onclick="toggleAutoPlay()" id="mobilePlayBtn"
+            class="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] active:scale-95 cursor-pointer text-center shadow-sm">
+      ▶ Авто-слайдшоу
+    </button>
+    <button onclick="goToSlide(slideIndex + 1)"
+            class="px-3.5 py-2 rounded-xl text-xs font-bold bg-[var(--secondary)] border border-[var(--border)] active:scale-95 cursor-pointer">
+      Далее ▶
+    </button>
+  </nav>
+
+  <!-- КНОПКА "НАВЕРХ" В РЕЖИМЕ СПЛОШНОЙ ЛЕНТЫ -->
+  <button id="backToTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
+          class="fixed bottom-5 right-4 z-40 hidden px-4 py-2.5 rounded-full text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] shadow-lg active:scale-95 cursor-pointer">
+    ↑ Наверх
+  </button>
+
+  <!-- МОДАЛЬНОЕ ОКНО: ЗАМЕНА 4+4 ФОТО -->
+  <div id="editModal" class="fixed inset-0 z-50 hidden bg-black/65 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-[var(--card)] border-t sm:border border-[var(--border)] rounded-t-3xl sm:rounded-2xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-4 sm:px-6 py-3.5 border-b border-[var(--border)] flex items-center justify-between">
+        <div class="min-w-0 pr-2">
+          <span id="modalProductCode" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-[var(--secondary)] text-[var(--primary)]"></span>
+          <h3 id="modalProductTitle" class="text-sm sm:text-base font-bold mt-1 truncate">Замена 4+4 фото товара</h3>
+          <p id="modalSheetInfo" class="text-xs text-[var(--muted-foreground)] truncate"></p>
+        </div>
+        <button onclick="closeEditModal()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[var(--secondary)] hover:opacity-80 cursor-pointer shrink-0">
+          ✕
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-6 overflow-y-auto custom-scroll space-y-5">
+        <div>
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+            <div>
+              <h4 class="text-xs sm:text-sm font-bold">1. Основные 4 ракурса (Ячейки O..R в Google Таблице)</h4>
+              <p class="text-xs text-[var(--muted-foreground)]">Вставьте ссылку Google Диска или прямой URL фото собранного стула:</p>
+            </div>
+            <button onclick="copyRowForSheet('active')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--secondary)] border border-[var(--border)] hover:opacity-90 cursor-pointer">
+              📋 Копировать 4 ячейки (O:R)
+            </button>
+          </div>
+          <div id="modalActiveSlots" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+        </div>
+
+        <div class="pt-4 border-t border-[var(--border)]">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+            <div>
+              <h4 class="text-xs sm:text-sm font-bold">2. Доп. 4 ячейки для генераций ИИ / Flow (Ячейки S..V)</h4>
+              <p class="text-xs text-[var(--muted-foreground)]">Запасные варианты. Нажмите «⬆️ В Ракурс», чтобы сделать фото основным:</p>
+            </div>
+            <button onclick="copyRowForSheet('ai')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--secondary)] border border-[var(--border)] hover:opacity-90 cursor-pointer">
+              📋 Копировать 4 ячейки ИИ (S:V)
+            </button>
+          </div>
+          <div id="modalAiSlots" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+        </div>
+      </div>
+
+      <div class="px-4 sm:px-6 py-3.5 border-t border-[var(--border)] bg-[var(--secondary)]/40 flex flex-wrap items-center justify-between gap-2">
+        <button onclick="resetProductImages()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)] cursor-pointer">
+          ↩️ Исходные фото
+        </button>
+        <div class="flex items-center gap-2">
+          <span id="modalCopyToast" class="text-xs font-semibold text-emerald-500 hidden">Скопировано!</span>
+          <button onclick="saveEditModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 cursor-pointer shadow">
+            💾 Сохранить фото
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО: НАСТРОЙКИ СИНХРОНИЗАЦИИ ПАПОК, ТАБЛИЦЫ И PDF -->
+  <div id="syncModal" class="fixed inset-0 z-50 hidden bg-black/65 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-[var(--card)] border-t sm:border border-[var(--border)] rounded-t-3xl sm:rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-4 sm:px-6 py-3.5 border-b border-[var(--border)] flex items-center justify-between">
+        <div>
+          <h3 class="text-sm sm:text-base font-bold">⚙️ Управление каталогом: Таблица, Папки и PDF</h3>
+          <p class="text-xs text-[var(--muted-foreground)]">Живая связь с вкладкой <code class="font-mono">B2B_Буклет_Витрина</code></p>
+        </div>
+        <button onclick="closeSyncModal()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[var(--secondary)] hover:opacity-80 cursor-pointer">
+          ✕
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-6 overflow-y-auto custom-scroll space-y-4 text-xs">
+        <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1.5">
+          <div class="font-bold text-emerald-500">✅ 1. Галочки в Google Таблице (Столбец A «В каталоге»)</div>
+          <p class="text-[var(--muted-foreground)] leading-relaxed">
+            На вкладке <a href="https://docs.google.com/spreadsheets/d/1Ee68RvsPAqKntENL0o6Xqu5lTpTHLNuj26erJRzPVcU/edit#gid=1432632828" target="_blank" class="text-[var(--primary)] underline font-semibold">B2B_Буклет_Витрина</a> в столбце <strong>A</strong> стоят галочки (чекбоксы). Если вы снимете галочку у любого стула или стола в Таблице, он <strong>автоматически пропадёт</strong> и из этого HTML-каталога, и из скачиваемого PDF-файла!
+          </p>
+          <div class="pt-1">
+            <button onclick="syncFromGoogleSheetLive(true)" class="px-3.5 py-2 rounded-xl font-bold bg-[var(--primary)] text-[var(--primary-foreground)] cursor-pointer">
+              🔄 Проверить галочки и фото из Таблицы прямо сейчас
+            </button>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-[var(--secondary)] border border-[var(--border)] space-y-1.5">
+          <div class="font-bold">📁 2. Автоматическая замена при смене файлов в папке Google Диска</div>
+          <p class="text-[var(--muted-foreground)] leading-relaxed">
+            Если вы заменили картинку прямо внутри папки на Google Диске (через «Управление версиями» файла) — она обновится автоматически. А если вы закинули в папку новые файлы с другими именами, просто запустите ярлык <code class="font-mono font-bold text-[var(--foreground)]">Обновить_фото_из_папок_Диска.bat</code> в вашей папке проекта — он за пару секунд просканирует все 66 папок и сам пропишет новые фото в Таблицу, HTML и PDF.
+          </p>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-[var(--secondary)] border border-[var(--border)] space-y-2">
+          <div class="font-bold">📤 3. Выгрузить локальные замены обратно в Google Таблицу (O2:V67)</div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="exportAllToSheetTSV()" class="px-3.5 py-2 rounded-xl font-bold bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] hover:opacity-90 cursor-pointer">
+              📋 Скопировать O2:V67 для Таблицы
+            </button>
+            <button onclick="downloadPdfBooklet()" class="px-3.5 py-2 rounded-xl font-bold bg-rose-600 text-white hover:opacity-90 cursor-pointer">
+              📄 Скачать PDF
+            </button>
+            <button onclick="downloadStandaloneHtml()" class="px-3.5 py-2 rounded-xl font-bold bg-emerald-600 text-white hover:opacity-90 cursor-pointer">
+              💾 Скачать HTML
+            </button>
+            <button onclick="resetAllCustomizations()" class="px-3 py-2 rounded-xl font-semibold text-rose-500 hover:underline cursor-pointer">
+              Сбросить локальный кэш
+            </button>
+          </div>
+          <div id="exportStatusMsg" class="font-semibold text-emerald-500"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script id="catalogDataScript">
+    const SPREADSHEET_ID = '1Ee68RvsPAqKntENL0o6Xqu5lTpTHLNuj26erJRzPVcU';
+    const B2B_GID = '1432632828';
+    const RAW_COMPACT = [{"id":"CHAIR-001","r":2,"c":1,"code":"001","t":"Стул с вырезом на спинке, св. коричневая рогожка, буковые ножки (ШК 83, 92)","d":"св. коричневые, черная царга, буковые ножки","bc":"83, 92","q":"42 шт","fn":"001 — св. коричневые, черная царга, буковые ножки (ШК 83, 92)","fid":"1PrRraL6zyNLhuaxqjrittrb-qZkQXCn2","cnt":1,"imgs":["14l1kvYnuBd0E4aNgvVgs-kYeKIoa07ej","14l1kvYnuBd0E4aNgvVgs-kYeKIoa07ej","14l1kvYnuBd0E4aNgvVgs-kYeKIoa07ej","14l1kvYnuBd0E4aNgvVgs-kYeKIoa07ej"]},{"id":"CHAIR-002","r":3,"c":1,"code":"002","t":"Стул с вырезом на спинке, серая рогожка, буковые ножки (ШК 36)","d":"серый, черная царга, буковые ножки","bc":"36","q":"19 шт","fn":"002 — серый, черная царга, буковые ножки (ШК 36)","fid":"1vBDCGQhq0piAv32ItvLb1eHzLyI2WFHT","cnt":1,"imgs":["1hfuX6geiFx0_trMlf_Kg0vNZYaqHuqlo","1hfuX6geiFx0_trMlf_Kg0vNZYaqHuqlo","1hfuX6geiFx0_trMlf_Kg0vNZYaqHuqlo","1hfuX6geiFx0_trMlf_Kg0vNZYaqHuqlo"]},{"id":"CHAIR-003","r":4,"c":1,"code":"003","t":"Стул с вырезом на спинке, коричневая рогожка, черные ножки (ШК 57)","d":"коричневый, черные железные ножки","bc":"57","q":"1 шт","fn":"003 — коричневый, черные железные ножки (ШК 57)","fid":"1aafTRBS5UwII_nxTWH9yHl6AZRLLYNUN","cnt":4,"imgs":["1MKV0OlAk8xS9PF-llK3wLgADrWzS8hZ0","1Lp3Pw9ElwsVrZmleLHwbxfPskP73uevp","1-81_kZL9iyC1m_0Uu0imGg9GD-lzQ6vs","1lBdzE1p8pd-PB2m6eOY14OV23jcplz4O"]},{"id":"CHAIR-004","r":5,"c":1,"code":"004","t":"Стул с вырезом на спинке, серая рогожка, бежевые ножки (ШК 63)","d":"Серый, бежевые железные ножки","bc":"63","q":"18 шт","fn":"004 — Серый, бежевые железные ножки (ШК 63)","fid":"1m1VRc-_a9cxR__msA9DyBvCT8Ju0J4d9","cnt":2,"imgs":["1EhhONiCPn5PrTT3vpwu_sSGmLx35zefA","1_JHMZM6yjfpFidX7OD3mAy77RPFLvnq4","1EhhONiCPn5PrTT3vpwu_sSGmLx35zefA","1_JHMZM6yjfpFidX7OD3mAy77RPFLvnq4"]},{"id":"CHAIR-005","r":6,"c":1,"code":"005","t":"Стул велюровый Loft синий, черные ножки (ШК 517)","d":"Синий бархатный, черные железные ножки","bc":"517","q":"3 шт","fn":"005 — Синий бархатный, черные железные ножки (ШК 517)","fid":"1SozRk50R-ZsgFaie_Shi14SdZHQ86glJ","cnt":3,"imgs":["1oLK2gNnFgVB0gZiCc7Bz-AIjBSUMz-xn","1Gzrn117_HNEGEGJgre4bM9xsbzRpsVFP","1uc3iERRDjnXbUnWI5gYPuVBT94aSUoEp","1oLK2gNnFgVB0gZiCc7Bz-AIjBSUMz-xn"]},{"id":"CHAIR-006","r":7,"c":1,"code":"006","t":"Стул букле (тедди) мятный, коричневые ножки (ШК 989)","d":"Мятный тедди, коричневые железные ножки","bc":"989","q":"3 шт","fn":"006 — Мятный тедди, коричневые железные ножки (ШК 989)","fid":"1QNpdHa0ihSN5Ssu7gHkhP_z_-AsaTjJz","cnt":3,"imgs":["16wyKgiNoGLpXEazTtAAhCulu8p1fVTGc","1fDnyZlANmqD9K7dPMl5Eh9bFQ1IhF16M","1zaDlcsvthHnoD2JLGYwvgsiPc4EmIU1_","16wyKgiNoGLpXEazTtAAhCulu8p1fVTGc"]},{"id":"CHAIR-007","r":8,"c":1,"code":"007","t":"Стул велюровый розовый, коричневые ножки (ШК 329)","d":"Розовый бархат, коричневые железные ножки","bc":"329","q":"27 шт","fn":"007 — Розовый бархат, коричневые железные ножки (ШК 329)","fid":"1iuCU3DF7uPavGevvTLgY_W-B2qt08kng","cnt":3,"imgs":["1CU1d21oNla06abFuSbNNym-XDwJ-ROYZ","1RBzTDID1lfD2C7yJI8zXpkooYkMiq0hE","16fAZhW6sGBTQZzNwiD0-xMYEuv1hoISs","1CU1d21oNla06abFuSbNNym-XDwJ-ROYZ"]},{"id":"CHAIR-008","r":9,"c":1,"code":"008","t":"Стул букле (тедди) бордовый, золотистые ножки (ШК 496)","d":"Бордовый велюр, золотистые ножки","bc":"496","q":"44 шт","fn":"008 — Бордовый велюр, золотистые ножки (ШК 496)","fid":"1i_nlMJWzN6Sclooh9jSRm8X_WhsgTESa","cnt":3,"imgs":["1sxo3nqN77pf3-7rxGk1sOF1aVFzJKiF6","11J0sBTYNCIbS5zHiiJQQ8Q4_RFxbcQA_","1GxAp_aeA0BjVgux6VnxTLIypHfWeSce4","1sxo3nqN77pf3-7rxGk1sOF1aVFzJKiF6"]},{"id":"CHAIR-009","r":10,"c":1,"code":"009","t":"Стул букле (тедди) бордовый, коричневые ножки (ШК 992)","d":"Бордовый велюр, коричневые железные ножки","bc":"992","q":"40 шт","fn":"009 — Бордовый велюр, коричневые железные ножки (ШК 992)","fid":"1NqdtImpXxhbmE2gSwS4f4l3WplHY2D1C","cnt":3,"imgs":["14Xu7s_YElsl8uzrha9jJ9qodFEsCfdlP","121InlYN9M-zPoBqjci3HxW_KS9aLPdl2","1S2eWmlAm2k1YUgbIzUAwBU3W5IECinqx","14Xu7s_YElsl8uzrha9jJ9qodFEsCfdlP"]},{"id":"CHAIR-010","r":11,"c":1,"code":"010","t":"Стул букле (тедди) коричневый, бронзовые ножки (ШК 312, 794)","d":"Коричневый велюр, бронзовые ножки","bc":"312, 794","q":"54 шт","fn":"010 — Коричневый велюр, бронзовые ножки (ШК 312, 794)","fid":"1CupDU390HFcFBZ_PDA1-Ag57iGZ3lmQA","cnt":4,"imgs":["1cjmfAFjGIU0_srwwAcC7vSC2uiPQ_6q8","1LyJI-3VgE2Qca755uz8YRFSOMNu_5b8A","1drmgqEOwmG-QOFDqrk8-oqYaUTGugvOY","1bHAXkfc1KJN11gHLR4TbXpvC8xJXVZzF"]},{"id":"CHAIR-011","r":12,"c":1,"code":"011","t":"Стул рогожка серый меланж, черные ножки (ШК 733)","d":"Серый, черные ножки","bc":"733","q":"4 шт","fn":"011 — Серый, черные ножки (ШК 733)","fid":"1SvYzjp6QbqF8BVYZdt8_z1gs33CP0rCI","cnt":5,"imgs":["1PeTHev6pdZtdmH7FWCI76f6b3oDJN9Nz","1FqWyNWFaxSOazULgMzboSgMicUMSPQyt","1nPG7shDBKCBXj4GZJpLPu97I5sPbJKCC","12qlnwTneWwoEiEsAP2xVeInmLJ3MksMt"]},{"id":"CHAIR-012","r":13,"c":1,"code":"012","t":"Стул рогожка светло-серый монотонный, черные ножки (ШК 6005)","d":"Серый (монотонн), черный ножки","bc":"6005","q":"20 шт","fn":"012 — Серый (монотонн), черный ножки (ШК 6005)","fid":"1bUFWlK8_TZGYmd0QHDA0FIfaJF1VQTza","cnt":5,"imgs":["1fKB6lQP9sG4XUAi4W_YPXncickCdjHpw","1OIGZzNMAVx9nw7xYG8Q7mKCKJOPlTCYe","1E0_sfQHR4TPy9dqw7RdehYns-O29Psin","1GiCxZ1KlSIBBpFPE_xZuMpyR-twJGZA3"]},{"id":"CHAIR-013","r":14,"c":1,"code":"013","t":"Стул велюровый розовый, золотистые ножки (ШК 115)","d":"Розовый бархатный, золотистые ножки","bc":"115","q":"12 шт","fn":"013 — Розовый бархатный, золотистые ножки (ШК 115)","fid":"1GXkjRhNA_UwBvkTTK4e3OY4KnS15-HoQ","cnt":5,"imgs":["13-a5MvHCTynS717P_3Nh7lyBfh2biU2D","1kL2TbJQBJNa_vtopqFr6ibCLdZ7YDwPx","1gtod7yUG991xqdQCnOAicV4FfPtM-s8J","1Zd0E4Uj-WmOmMsjt-nyfZv2opXskj49V"]},{"id":"CHAIR-014","r":15,"c":1,"code":"014","t":"Стул велюровый коричневый, коричневые ножки (ШК 312)","d":"Коричневый бархатный, коричневые железные ножки","bc":"312","q":"33 шт","fn":"014 — Коричневый бархатный, коричневые железные ножки (ШК 312)","fid":"1JsZTKtGThwJvPsxJ7ZoJach9xZQ5wmIy","cnt":5,"imgs":["1BN3D2bUQW2IGnAIU4bpAqletjDwUpP1l","1lQhKUPVQKQ8sqjHnc_GrcIfbbpvhkodq","1IoRN4l-mavJeQoSdnJF-ik9f3G-Sn_gF","1Ko-bIXNXj2i4gS8s_R0r5B0fWeZebcHG"]},{"id":"CHAIR-015","r":16,"c":1,"code":"015","t":"Стул рогожка серый меланж, коричневые ножки (ШК 145)","d":"Серый, коричневые ножки железные","bc":"145","q":"43 шт","fn":"015 — Серый, коричневые ножки железные (ШК 145)","fid":"1m9-MU3swXevBii1UO5NYo_n9C0YhooAL","cnt":6,"imgs":["1ERBfKYXfAoIetOC-BnrM2af8ubw54PlK","1ssV8_t3UH6oR1nryaP9e0u3bAiCqQbsf","15mIZEzPa7JgZtoAp_hyolYHMOZBIX0lx","1p_FSB9_2WL1GJbsIz8uJ7S-lKJinEjs9"]},{"id":"CHAIR-016","r":17,"c":1,"code":"016","t":"Стул велюровый горчичный, коричневые ножки (ШК 296)","d":"Золотистый бархатный, коричневые железные ножки","bc":"296","q":"20 шт","fn":"016 — Золотистый бархатный, коричневые железные ножки (ШК 296)","fid":"1NmfnOeJdQ4mQBwBhTD_peKMQvPxIQXGa","cnt":4,"imgs":["1pdRArafIVCuMtGxCG1OLUBT165Vlc8nq","1C4erRxm98M14JaT7jWBD6m3GF-quH0Se","1lljhMEhE9pSZwhPJbmFh-6i3mCucYmEh","1iS-hLElPZk5R_5I8HgjOjMcLl99Dq8xh"]},{"id":"CHAIR-017","r":18,"c":1,"code":"017","t":"Стул рогожка оранжевый, коричневые ножки (ШК 388)","d":"Оранжевый, коричневые железные ножки","bc":"388","q":"9 шт","fn":"017 — Оранжевый, коричневые железные ножки (ШК 388)","fid":"19lQviZrst_s0iH3ZUQpCqzPoh70rUXMq","cnt":5,"imgs":["1VDeurOxXxpdxITuMOJoOxm3Isy_hGJdd","1O9P7xQVxwWubtd5A0pFtryK8y1n-nTgQ","15mvC1axDoLOLNnbViuo1IsFfzcJYEp5r","1MdOIcxqYGBD73ymLQcCNnddgdCjEhfcY"]},{"id":"CHAIR-018","r":19,"c":1,"code":"018","t":"Стул велюровый оранжевый, золотистые ножки (ШК 191, 496)","d":"Оранжевый бархатный, золотистые ножки","bc":"191, 496","q":"51 шт","fn":"018 — Оранжевый бархатный, золотистые ножки (ШК 191, 496)","fid":"1IudrFJ6u2f1FtBNZD6UXfqPMcszrfwIH","cnt":5,"imgs":["16XC4bg9g1eEqnddSGtkHhnpfhomiDvkr","1V4zs--kUOZ1-OhsmN0U4QsTubLGEdgqd","1gyHfcAjQ62wEgFOn3Iv-InIdKIjYRXQt","1N7MTmZzgqlbHdCB1MUjS4H2fIUl_en3Z"]},{"id":"CHAIR-019","r":20,"c":1,"code":"019","t":"Стул велюровый белый, коричневые ножки (ШК 498)","d":"Белый бархатный, ножки коричневые","bc":"498","q":"4 шт","fn":"019 — Белый бархатный, ножки коричневые (ШК 498)","fid":"1uXR6GrXcF1U4f1kvAywanjTsaEEp9IBV","cnt":5,"imgs":["1MJF8pna8rjqNcA5sgkgeXjeXD_DdzMMr","1dqxUjhTjslIVZCf6AZTMHwVcVXIjc3cI","1Y9mxkV8igUI3cNXFdDNTpGc4ux30X9WX","1p6awp4WYghXDoIYBkRWk0LmAbbIBCa_x"]},{"id":"CHAIR-020","r":21,"c":1,"code":"020","t":"Стул рогожка бирюзовый, коричневые ножки (ШК 672)","d":"Бирюзовый, коричневые ножки","bc":"672","q":"4 шт","fn":"020 — Бирюзовый, коричневые ножки (ШК 672)","fid":"1Y_gYCn5ygD-Yj5I8Gv6ciOZXZcJjQW_V","cnt":4,"imgs":["1bW2CBA0WboDqCOYR-mqVhAnleNE4rJUA","1nBop3zFDhK2ZCrOa4qIxoaAH4ZXe9bMn","17dPqb8RLhVtB-uqi7JgdLS4FaWyOYheQ","1JEJCcTpeX6K6C2646j9fQAa_6seAOoDl"]},{"id":"CHAIR-021","r":22,"c":1,"code":"021","t":"Стул велюровый мятный, коричневые ножки (ШК 609)","d":"Мятный бархатный, коричневые ножки","bc":"609","q":"6 шт","fn":"021 — Мятный бархатный, коричневые ножки (ШК 609)","fid":"1icz573adBKJmEe-KIqd0EOa2N5uVh5eN","cnt":4,"imgs":["1YpsrgAfklxyJaGmxHOhmpR33aXWil9Td","1OdK0aRB016EtiF97ij1W-ymJ-mPV1nOk","1q0RVqoWrYOhADkOD4t1N8BXuHFtpBi1b","1VwIe3NHnqWDNiMT0FgPTpcuE4CPfkr1B"]},{"id":"CHAIR-022","r":23,"c":1,"code":"022","t":"Стул рогожка серый монотонный, коричневые ножки (ШК 028)","d":"Серый монотонный, коричневые ножки","bc":"028","q":"21 шт","fn":"022 — Серый монотонный, коричневые ножки (ШК 028)","fid":"1_W0CxISEB7lXM-RZgWAL0PSLpxhJ02rZ","cnt":5,"imgs":["1TuwPrKNOyxMOYxCqoNt5R-7vfZLUINfE","1ASY0d7j2xg7yzJev680DlMgIEZ_R_T2h","1-fd8B_IMU5gPtvXPhhArA0jJbpvkwewM","1pkEZesi0lHDrPi9LMWUbvTvrL3VQHKAE"]},{"id":"CHAIR-023","r":24,"c":1,"code":"023","t":"Стул рогожка зеленый, бежевые ножки (ШК 517)","d":"Зеленый, бежевые ножки","bc":"517","q":"7 шт","fn":"023 — Зеленый, бежевые ножки (ШК 517)","fid":"11JAMSUC68qhmz6IG6VGM9tzXNC_EYID2","cnt":4,"imgs":["16yyavI2cQHywqbo0ntJBXWdPu7PQE2v8","1EdGs_Ds3xx46KB73tyXfsvx1PFPJvlIn","1JCGN7yCinTWK84nDfM77UPhKKiqtpBSN","10kiPec3aqZd7iRqOfyDvn3Rp26NipWxA"]},{"id":"CHAIR-025","r":25,"c":1,"code":"025","t":"Стул букле (тедди) розовый, коричневые ножки (ШК 562)","d":"Розовый, коричневые ножки","bc":"562","q":"6 шт","fn":"025 — Розовый, коричневые ножки (ШК 562)","fid":"1unxq1Z9jjYmizxv4K1_CIgpelDS0UL9t","cnt":5,"imgs":["1qo435ujOvxeUlqkspzqOB1NyP-dV7DEZ","13GWfXsbeBtIzqM_5XKQhz4dH7ZIXXbFW","1z24X-0enHc2dIcWsSmZoGS5UngGLrCvR","1SBvUCVUKGeoowKp3IB8bQ2TlAgYX4NG5"]},{"id":"CHAIR-024","r":26,"c":1,"code":"024","t":"Стул рогожка темно-серый, черные ножки (ШК 326)","d":"Серый темный, черные ножки","bc":"326","q":"10 шт","fn":"024 — Серый темный, черные ножки (ШК 326)","fid":"12qO05mEEFsQo2M33zf89truHeMQz2eM1","cnt":5,"imgs":["1matZj_bqinm1y2OU2XQ2iVaG9ndRqH3e","1DuglWhteUheVODKqMPzb3b4MwLED38In","1bzgkgo0dZkOhgraBhDgV7W83xf44GKZx","1fG0Q_ZKLHsXznbNymZuHqfMI-ELGn1qB"]},{"id":"CHAIR-026","r":27,"c":1,"code":"026","t":"Стул велюровый синий, коричневые ножки (ШК 371)","d":"Синий бархатный, коричневые ножки","bc":"371","q":"5 шт","fn":"026 — Синий бархатный, коричневые ножки (ШК 371)","fid":"19UfTXQ_8-yxQW-57dMYR8C2WEe_g4poA","cnt":5,"imgs":["1NY6Pt3giUswZTTbn1uCvivF51VIhhCtr","1a-BIyFKlLcPIFNaUwjpVAzVVQnJeDLAt","1RVf-11zWiIPtsDyKK7_vC-RsMLA40ypy","1dCbktgcDEU7n6UAy9R8GdDf7HVJ0meg5"]},{"id":"CHAIR-027","r":28,"c":1,"code":"027","t":"Полукресло с подлокотниками (Eames), серая рогожка, буковые ножки (ШК 591)","d":"Серый, буковые ножки, черная царга","bc":"591","q":"113 шт","fn":"027 — Серый, буковые ножки, черная царга (ШК 591)","fid":"1oQz4UQbLP0fEIPV5Urow6kzfJ0ZyPgpe","cnt":6,"imgs":["1PtKR0Z-M3yqFKjT8V72oxPMu6itgAgDY","18JptHqqfwEmETeLO5plhkG709efzNMYH","1qDkV-sNpzQ4nzbz79nG2qdKZH83uAImc","1PBZEVZWRjD0AQ-aOphfkPq0734ncCXo9"]},{"id":"CHAIR-028","r":29,"c":1,"code":"028","t":"Кресло поворотное с подлокотниками, коричневая рогожка, черные ножки (ШК 675)","d":"кресло, ткань рогожка, коричневая в крапинку, ножки черный метал, крутящийся механизм","bc":"675","q":"1 шт (образец)","fn":"028 — кресло, ткань рогожка, коричневая в крапинку, ножки черный метал, крутящийся механизм (ШК 675)","fid":"11bwXed4AoGaA8ulfAubL3YWm9-kAiOcG","cnt":5,"imgs":["1-yNj4GQZTJxsukItJd8_mZVvw29YcICx","1OB5AyV-3Y_QT_X7nU8stdzgMSKF9hVYC","1Pe_gST0BPKt0x_KJx0Lae1FtNodoqVhs","1svwz-c8_LRKZMULmAInHW0jNcrUWlNbX"]},{"id":"CHAIR-029","r":30,"c":1,"code":"029","t":"Стул букле (тедди) коричневый, коричневые ножки (ШК 879)","d":"Коричневый, коричневые железные ножки","bc":"879","q":"2 шт","fn":"029 — Коричневый, коричневые железные ножки (ШК 879)","fid":"1Ka4dRJmTeSFgOPThIIXxqk_mwqBN_eP_","cnt":5,"imgs":["1TQ2a1Z7RBW21ATXv8bRPvPdiUED7zP2V","1JhLGNkarBrl8wt3AG2fUX3dAu03mwTFT","1KFzEjIQj_L9jOciB6kdzKnI_7WnJSLNU","1IZIVrNPuHyuGvz70ahjjEv_MbkTE_kxj"]},{"id":"CHAIR-030","r":31,"c":1,"code":"030","t":"Стул велюровый серый, желтые ножки (ШК 344)","d":"Серый бархатный, желтые железные ножки","bc":"344","q":"1 шт","fn":"030 — Серый бархатный, желтые железные ножки (ШК 344)","fid":"1QKqA5XsoYSYcymhikbfpQuyD2gs2tlFh","cnt":5,"imgs":["161fy5_Fft1U_Qw-knGXzXQar6AVUV66c","1hrDdGQmWNG8K6GvOsm2REIDBOdv0-l1D","1bBIvSBsbDeRK5lGUXqoGwjFHYkNdk5C8","14lXgBBTC0DMTWibcyjaGsM2XCZ28ZGdS"]},{"id":"CHAIR-031","r":32,"c":1,"code":"031","t":"Стул с квадратной стежкой, коричневая рогожка, черные плоские ножки (ШК 668)","d":"Коричневый в крапинку, черные железные плоские ножки","bc":"668","q":"1 шт (образец)","fn":"031 — Коричневый в крапинку, черные железные плоские ножки (ШК 668)","fid":"1qkEvni0o-C917rUOLHNRVZRDr9rz9SGY","cnt":7,"imgs":["1wCRVIOR8hH8J4-0CSGT7WHQtX7kXMSgT","1Md97Hfuphe4u48eXTOlszi0chIq-jAzN","11X9GOwtpgtP1CDiZA3FIqFRk6f7FLmAX","1bN9mbRlTp_LjrucL_pE6fbIR51m-Jfm2"]},{"id":"CHAIR-032","r":33,"c":1,"code":"032","t":"Полукресло с подлокотниками, коричневая рогожка, черные круглые ножки (ШК 682)","d":"Коричневый в крапинку, черные круглые ножки","bc":"682","q":"1 шт (образец)","fn":"032 — Коричневый в крапинку, черные круглые ножки (ШК 682)","fid":"17hTxVErwUGwS0BbdXDbn7S-iajJkVVoV","cnt":5,"imgs":["1EvodoKVsWWQ4A6cczWc_LDeG9kr7QfUW","1tXyCmxI4n2WeUEWdZKnaHE10DiQ5iH95","1jVTOks30soW-AoBsdA841_HUCsXKZC9t","1T_pRxMbi3pcMlYfIP0kBXGUDZ0e2ciRG"]},{"id":"CHAIR-033","r":34,"c":1,"code":"033","t":"Стул (сиденье без ножек), светло-серая рогожка (ШК 068)","d":"Светло серые монотонн, ножки неизвестные","bc":"068","q":"4 шт","fn":"033 — Светло серые монотонн, ножки неизвестные (ШК 068)","fid":"1gfreNTmSub8M9NVzWZJ4BkHw8cGNzxXd","cnt":3,"imgs":["131IoVP54H_T0KvrZNVYpc2fksnxOPFiS","1EEvqx4D-I_wnmcgHfzqyGK8z45D5L2ii","1UPNGbA54DlJGdH0nbCe7JNoTEwMy3ELz","131IoVP54H_T0KvrZNVYpc2fksnxOPFiS"]},{"id":"CHAIR-343","r":35,"c":1,"code":"343 (Честер)","t":"Стул Честер темно-серый экокожа, черные металлические ножки (ШК 343)","d":"Форма Честер, цвет тёмно-серый экокожа, ножки метал черный","bc":"343","q":"3 шт","fn":"343 (Честер) — Форма Честер, цвет тёмно-серый экокожа, ножки метал черный (ШК 343)","fid":"1Gj1TEPUIGsACWuGTHvZcf4yrkxVwBr-x","cnt":5,"imgs":["1ZD6N8O1kgFtEKyZnXo3d3ksujGIeHoxf","1MosmMCH8R7EuBZ1oK1n2MraxI6eqhPgk","1dC4KU4OS-lJudUAtVtt0OjYOF7MIJN7e","1Wo9x1Nx5_78yF6t4-RTvCo5-xZm_oD6T"]},{"id":"CHAIR-970","r":36,"c":1,"code":"970 (Честер)","t":"Стул Честер грязно-бежевый экокожа, черные металлические ножки (ШК 970)","d":"Честер, грязно бежевый, ножки метал черный","bc":"970","q":"1 шт","fn":"970 (Честер) — Честер, грязно бежевый, ножки метал черный (ШК 970)","fid":"1jRXmOdF7OLEzb0R8kHZ3rCQWCzkoTvAx","cnt":4,"imgs":["1Z_gGaVEHC6dDMWZOadnkQGFeb1Eh2fyv","189JWnNH_lq-K-_6cIv1KZoSHGDrYcY3I","1PAM3Tol0MwGy-Is3pxyL0WXn3d3So92z","1-OOhNcsKEQRfxCIK5pPuZYYSbnVwYAem"]},{"id":"CHAIR-778","r":37,"c":1,"code":"778 (Походу это 013)","t":"Стул велюровый розовый, золотистые ножки (ШК 778 - дубль 013)","d":"Бархат, розовый, золотые ножки метал (Походу это 013)","bc":"778","q":"22 шт","fn":"778 (Походу это 013) — Бархат, розовый, золотые ножки метал (Походу это 013) (ШК 778)","fid":"174vHX23EhL8dCI12YxORi3ajl9aHWUNk","cnt":5,"imgs":["13-a5MvHCTynS717P_3Nh7lyBfh2biU2D","1RjKj3tun_a3eDR2SvifG2hnB6si4Pj-u","1p8Kj5Cs5kooNeHBs_gKNDdNsy9vLh7cr","1-MrsIidKuL6CZ67-tH1Bamhxg5Yoel5G"]},{"id":"TABLE-01","r":38,"c":2,"code":"Стол 01","t":"Стол 01 — Круглый, белый МДФ, черные ножки, нераздвижной","d":"Обеденный стол EAMES DSW, круглый, 90*90*75 см, МДФ, белый (или черные ножки)","bc":"1000032627496","q":"27 шт","fn":"Стол 01 — Круглый, белый МДФ, черные ножки, нераздвижной","fid":"1OB2Jqco9dgR61ks3YHi_3tCb_0HUMU8h","cnt":3,"imgs":["1x_VqlJzH-O_tyYCH0ZWs3ayf6JI5qUwe","1nsHgpIq38QH3ulQo2kx2y1x0I4hSy9ap","1fkSGXe8wfyqnElj5nh9AQzqB6IqskK6-","1x_VqlJzH-O_tyYCH0ZWs3ayf6JI5qUwe"]},{"id":"TABLE-02","r":39,"c":2,"code":"Стол 02","t":"Стол 02 — Прямоугольный, белый МДФ, белые ножки, нераздвижной","d":"МДФ, 90*90 не раздвижной, белый/белый","bc":"1000034085928","q":"2 шт","fn":"Стол 02 — Прямоугольный, белый МДФ, белые ножки, нераздвижной","fid":"1QE4oTSrzDWYYofdI0V5v3i4rwSl10Kl3","cnt":3,"imgs":["1kSC6PG0Czy6zTPBuyIA55ys93Z1sTPOq","1yplkjCJEBqAhI5oWLf4YzZ7Fs-1f-MJ7","1y4Yt1Z5p1vpqkQDZPw9RSJ28tk_F0XkV","1kSC6PG0Czy6zTPBuyIA55ys93Z1sTPOq"]},{"id":"TABLE-03","r":40,"c":2,"code":"Стол 03","t":"Стол 03 — Круглый, белый МДФ, белые ножки, нераздвижной","d":"Обеденный стол EAMES DSW, круглый, 90*90*75 см, МДФ, белый","bc":"1000032627496","q":"27 шт","fn":"Стол 03 — Круглый, белый МДФ, белые ножки, нераздвижной","fid":"1OJvHjr68WF4t0N0Ameofza1RAeB0andk","cnt":4,"imgs":["1NWl1DHyOXu1jziiNnyrNzfE39UqjnAnQ","1FQ3_Y2T6Fb85Vk9WpVWF47U7ts4M9SOh","1csiikErhK8BLU8kLJblqP6PtirWiEkW4","1UWwtCrq-UbtUkZ-BA5zNAmd1Rm7iRLPS"]},{"id":"TABLE-04","r":41,"c":2,"code":"Стол 04","t":"Стол 04 — Круглый, белый мрамор, черные ножки, нераздвижной","d":"Стол МДФ 90/125 см, столешница белый мрамор, ножки чёрные","bc":"1000032628059","q":"5 шт","fn":"Стол 04 — Круглый, белый мрамор, черные ножки, нераздвижной","fid":"174BvvNEij86jklQLfukevUvPaUCiz8Jz","cnt":7,"imgs":["1oz_OjUBgRMg6wKS9Iy3sgBx6sIyFKs7f","1sjqw0jKAfEoujXKnG4RScc-gKV5vK1-v","1CaHTAYfjy6CvDLT1k2SM6zGgZtj-mI1G","1EtBjUvITAbHbCclqPILqAlm0NI5w8gDm"]},{"id":"TABLE-05","r":42,"c":2,"code":"Стол 05","t":"Стол 05 — Круглый, серый мрамор, черные ножки, раздвижной","d":"МДФ, 90(125)90, раздвижной, бело-серый мрамор/черный","bc":"1000034086147","q":"3 шт","fn":"Стол 05 — Круглый, серый мрамор, черные ножки, раздвижной","fid":"1wCiYBg8zKlvbCEkDMPQLVtZvSmS-R7bE","cnt":8,"imgs":["1srGdWJOrAT0ZzR-IM8bQa7wpMRVZBHLW","1BbOiuXBMXn85ssmCBlAD5f6gWLhnLPRR","1h_QlaTQ16eqW4neqyixWaeGEQma9QfBW","1CwbTNy6UzEMYED2L0JCocXurUCQsofVD"]},{"id":"TABLE-06","r":43,"c":2,"code":"Стол 06","t":"Стол 06 — Круглый, бетон, черные ножки, нераздвижной","d":"Стол ЛДСП нераздвижной, 90, столешница бетон пайн, ножки черные","bc":"1000032592695","q":"1 шт","fn":"Стол 06 — Круглый, бетон, черные ножки, нераздвижной","fid":"1n_2hPWVPv2cQscioLkEvOVCwSkmKj5uQ","cnt":4,"imgs":["1oiiP1ia2O97Y98mbBw1ZSod0uuZEEQqt","1E-Kbmx0tDPlq5M2WzEVkAS1wRGNd-7HW","1x1GdupsaKEtR5OvnaGEpRG4jOv_lkeJD","13UlbukX8TZGjEYg2r4FGz6yrv7PlQBsh"]},{"id":"TABLE-07","r":44,"c":2,"code":"Стол 07","t":"Стол 07 — Круглый, белый МДФ, черные ножки, нераздвижной","d":"Стол круглый МДФ белый, черные ножки","bc":"1000032627496","q":"27 шт","fn":"Стол 07 — Круглый, белый МДФ, черные ножки, нераздвижной","fid":"1u4FnGFkTgEcYdjfNcEgVC9m8ohxuukLn","cnt":3,"imgs":["1VVFNDDX8OyDzKHdUOc4fiYyPCoSL8iLE","1hK65E8DwKBTGXV166ntjxIDFN_Dvg9qr","1YePL42MumzYH-1Sl58fj3J1TGrA9YhZj","1VVFNDDX8OyDzKHdUOc4fiYyPCoSL8iLE"]},{"id":"TABLE-08","r":45,"c":2,"code":"Стол 08","t":"Стол 08 — Круглый, белый МДФ, белые ножки, нераздвижной","d":"Обеденный стол EAMES DSW, круглый, 90*90*75 см, МДФ, белый","bc":"1000032627496","q":"27 шт","fn":"Стол 08 — Круглый, белый МДФ, белые ножки, нераздвижной","fid":"1bNquWCdaEVEWfmvHydrHz-JCEKGj-TUR","cnt":5,"imgs":["1qq7hAV6MkgkiJiX1F4aCEbdteQdksNeW","1NfYb7XlkyX2ry7ZPCMESEpMHSgLbmsil","17YdAuPPInuSZMahz7dmeLu8kRnCPga3n","1aYqQgIoDPooBBbzE_qKfDmit7pbIq4iV"]},{"id":"TABLE-09","r":46,"c":2,"code":"Стол 09","t":"Стол 09 — Круглый, белый мрамор, черные ножки, раздвижной","d":"Стол МДФ раздвижной 90/125 см, столешница белый мрамор, ножки чёрные","bc":"1000032628059","q":"5 шт","fn":"Стол 09 — Круглый, белый мрамор, черные ножки, раздвижной","fid":"1X5W-sws1_R0dnGVsy0SIeIPVQrr6fEgZ","cnt":5,"imgs":["1fdZSvsXb0G7RQlDQwYc5bk9rc0Dy-XAG","1ewmQrpuNOzKrTLbqUqiFrduoEHYLXQqT","1XkTX5LWD8Re_cWRCuz-1TYTJuKpSjNah","1rn7K6rH0_0zAWQda1hQT6dj2z5_BmoFw"]},{"id":"TABLE-10","r":47,"c":2,"code":"Стол 10","t":"Стол 10 — Прямоугольный, дерево дуб, черные ножки, нераздвижной","d":"Стол ЛДСП 120, столешница Дуб Баррик, чёрные ножки, шифр SS 2025/083","bc":"1000033215784","q":"3 шт","fn":"Стол 10 — Прямоугольный, дерево дуб, черные ножки, нераздвижной","fid":"15BLALJUN0HYy8zHzro6eGMySl27WLRrq","cnt":6,"imgs":["1cUmEgP-fnQ2lD2IlMuwBgsFOi5TbT2Wz","1jSL5Fn1_rFk5NpnxeEnPGsrNNE6lr8_J","1fKktEaLyVAA0M11v4KVNYujqe1bSrTur","1jCMyMbATxipiCexsX-KMwo57GtIGNC0o"]},{"id":"TABLE-11","r":48,"c":2,"code":"Стол 11","t":"Стол 11 — Прямоугольный, черный мрамор, черные ножки, раздвижной","d":"Стол МДФ, раздвижной, 100/135, столешница черный мрамор, ножки черные","bc":"1000032586922","q":"2 шт","fn":"Стол 11 — Прямоугольный, черный мрамор, черные ножки, раздвижной","fid":"1lbh111maXIUrM18G0D6nf6dvSldbeJs5","cnt":6,"imgs":["18flU4nPknPO-rwQdstgErGzYbVsDqctD","11BkVTZkiAO3HAAny_pnIJQ5SBB2h_HyA","1kpdor9ORJvAVFDEMYEVJVMEkEzJKYuEk","1S2oSeReLXc17INxXHWO0QaObE4vz8pSx"]},{"id":"TABLE-12","r":49,"c":2,"code":"Стол 12","t":"Стол 12 — Прямоугольный, белый МДФ, черные ножки, раздвижной","d":"Стол МДФ раздвижной, прямоугольный, 100/135 см, столешница белая, ножки чёрные","bc":"1000032604244","q":"3 шт","fn":"Стол 12 — Прямоугольный, белый МДФ, черные ножки, раздвижной","fid":"1GtBZvd9iZpWaW0CiIm_HmhRQDpIvQTtf","cnt":5,"imgs":["1R5XM99dnxc5CuulsjsNzZKvCyM5LxQ6w","1Tr4BBSUsBE07iNcXsrtT5uYoaGuiUiyY","1MAWHrhBlUJFPxX44FDUjGBmo0C4kRsHF","198vwv52ziPYY7Ed4K6kLMWpNwIFbxjoI"]},{"id":"TABLE-13","r":50,"c":2,"code":"Стол 13","t":"Стол 13 — Прямоугольный, белый мрамор, черные ножки, раздвижной","d":"МДФ, 120(155)75, раздвижной, бело-серый мрамор/черные ножки","bc":"1000034085850","q":"2 шт","fn":"Стол 13 — Прямоугольный, белый мрамор, черные ножки, раздвижной","fid":"1eiRVeThYxjIqtGcm8Cu36BdIAqPxJbLh","cnt":6,"imgs":["1hJoYpeWJrxeynK-mu_fYSFaiMkKtsA_d","17u0dDsGaoB7vEJ2RIgPx95jwscdW_fmZ","1vClU-VFq0kkkR7MjzLpFxfyAWSkK8fGO","1dkxjns2d2Wh_G41yQXoL-nIZnU4BmEHl"]},{"id":"TABLE-14","r":51,"c":2,"code":"Стол 14","t":"Стол 14 — Прямоугольный, серый мрамор, черные ножки, раздвижной","d":"Стол МДФ раздвижной 100/135 см, столешница серый мрамор, ножки чёрные","bc":"1000032668048","q":"1 шт","fn":"Стол 14 — Прямоугольный, серый мрамор, черные ножки, раздвижной","fid":"13GAFRsQFaElCh02eUs0yU9aX_KK6ddIs","cnt":11,"imgs":["1M5FLRD1trD_gvKK1epjNqOCe0__LzDhR","1iy4_e3LUXsoWFQEHQwkoSULvb5Ijd5S5","1aZ5i7eRabdDnqCH2aWicPSMLARfxpmxx","1YvtJwMuh8oo_khOd8NDdogl8GTLkfC-Q"]},{"id":"TABLE-15","r":52,"c":2,"code":"Стол 15","t":"Стол 15 — Прямоугольный, дерево дуб, черные ножки, раздвижной","d":"Стол ЛДСП раздвижной, столешница бетон пайн экзотик / дуб, чёрные ножки, SS 2025/084","bc":"1000033215852","q":"2 шт","fn":"Стол 15 — Прямоугольный, дерево дуб, черные ножки, раздвижной","fid":"1rSsTRiNgNaVXI2vJqmUMBEttlIVquHWJ","cnt":7,"imgs":["1JODhRUZG2LE5i0yjD6ipSb1HAHZwF6LO","1XOkaIAEw7xbNPjSVgLpm-mu8bzn9nINj","1sKPu9a2zXenZE3U_qeQMUq8lXvLHjXqn","1O7Kcd1xZ0WRvueu0XXYbDhKR_ruSkzhv"]},{"id":"TABLE-16","r":53,"c":2,"code":"Стол 16","t":"Стол 16 — Прямоугольный, белый МДФ, белые ножки, нераздвижной","d":"Стол ЛДСП прямоугольный, нераздвижной, 120*75 см, столешница белая, ножки белые","bc":"1000032754222","q":"1 шт","fn":"Стол 16 — Прямоугольный, белый МДФ, белые ножки, нераздвижной","fid":"1TOClqG7d7_pk1z7XtjGzD8-e55rmo0hn","cnt":3,"imgs":["1tiBpz6OSDRsmzwPL9X--N3ELDDLxR5fP","1yHr0qIDIaXP0bMofSf0n0hH2__FU1ce1","1mssZI63eX6FtAeJ9rSTuAWYD2lXnd2DT","1tiBpz6OSDRsmzwPL9X--N3ELDDLxR5fP"]},{"id":"TABLE-17","r":54,"c":2,"code":"Стол 17","t":"Стол 17 — Прямоугольный, бетон, черные ножки, нераздвижной","d":"Стол ЛДСП нераздвижной, 90 см, столешница Метрополитан грей, ножки чёрные","bc":"1000032604008","q":"1 шт","fn":"Стол 17 — Прямоугольный, бетон, черные ножки, нераздвижной","fid":"1tghYWUlnacCpsctTK-KpTjYy1wzEcgbC","cnt":3,"imgs":["1QetigX55tYMoLWT5EfeGP-s8R_vahq63","18JsXEOeSm1Pgeih8chM2DZyesfXTobIe","1HdKOWE_Kx_RoaUnU74pJnJOQApXDUDn2","1QetigX55tYMoLWT5EfeGP-s8R_vahq63"]},{"id":"TABLE-18","r":55,"c":2,"code":"Стол 18","t":"Стол 18 — Прямоугольный, дерево дуб, белые ножки, раздвижной","d":"Обеденный стол ALINA 120*80 см, раздвижной до 160 см, шпон/MDF, белый-коричневый","bc":"1000033329146","q":"1 шт","fn":"Стол 18 — Прямоугольный, дерево дуб, белые ножки, раздвижной","fid":"1T9ZEUdMzJ0NKzwsV02eG6TQxSqLiKkEV","cnt":8,"imgs":["1u6F0_Wd-IZ86YPH8wTyzHKH7CL5hag1y","1KPfH2k-rDf-aYGfxHzprt0gl-pU_OMsn","17WzQy0OTgz8kO2Dfp--UX4d3m3dITGHg","1gP9ykkXhBxcZPghNj1qydQDf90aqxboq"]},{"id":"TABLE-19","r":56,"c":2,"code":"Стол 19","t":"Стол 19 — Прямоугольный, белый МДФ, черные ножки, раздвижной","d":"МДФ, 100(135)60, раздвижной, белый/черный","bc":"1000034086192","q":"1 шт","fn":"Стол 19 — Прямоугольный, белый МДФ, черные ножки, раздвижной","fid":"1HdR12pg3o2ohkgLjmUO0ILmyyKTy53DM","cnt":6,"imgs":["1l_R1DAZyHb57znTV0Gd4W1vFPh23Zvyk","1cbKv_XpYPEa-4_uqzcQMjQwNjV6vDE8f","1D3UunQIEBjyZfi9iM4IkhPjpzVS77Wjd","1J8f14xaLxOV19InvOBTXckNDrurJtk-e"]},{"id":"TABLE-20","r":57,"c":2,"code":"Стол 20","t":"Стол 20 — Круглый, белый МДФ, белые ножки, нераздвижной","d":"Обеденный стол EAMES DSW, круглый, 90*90*75 см, МДФ, белый","bc":"1000032627496","q":"27 шт","fn":"Стол 20 — Круглый, белый МДФ, белые ножки, нераздвижной","fid":"1QSz238UusrtRIcTYDtZphaAMndne5DDV","cnt":3,"imgs":["1jVgGBzM7ZS2xhHA5jDMNTJSYBfivLO5e","12uQXZbe3elj_vlvqnOlzxFDf6uEOTUh2","1xXC7-47nWbbZJfZINYvnr-bqmnGbvklI","1jVgGBzM7ZS2xhHA5jDMNTJSYBfivLO5e"]},{"id":"TABLE-21","r":58,"c":2,"code":"Стол 21","t":"Стол 21 — Овальный, белый МДФ, ножки дерево бук-дуб, раздвижной","d":"МДФ, 100(135)70, раздвижной, белый/бук","bc":"1000034086253","q":"3 шт","fn":"Стол 21 — Овальный, белый МДФ, ножки дерево бук-дуб, раздвижной","fid":"1Tv_KReNwVKnrd3_irz8m7KNkdR6lyDXN","cnt":6,"imgs":["12uE6cRlyOEy84zLcAmqqsBDOblPg3s9X","19DAxVQAr684xRk02_auSEbtTMBDeQrYC","1GOKGxn4fs60WLKGwrOyqfIm5bOTfXqZ8","1Z6DRla8akpgkvgOOWLJsQbbrzVuqvl6P"]},{"id":"TABLE-22","r":59,"c":2,"code":"Стол 22","t":"Стол 22 — Круглый, дерево дуб, белые ножки, нераздвижной","d":"Стол МДФ нераздвижной, 100 см, столешница белая/дуб, ножки бук/белые","bc":"1000032613581","q":"5 шт","fn":"Стол 22 — Круглый, дерево дуб, белые ножки, нераздвижной","fid":"1hwy5nl_gaHpBCZqg9jh35nhRaYwRhlNm","cnt":6,"imgs":["1pypsJzAr25Av1Sqt76XiUudrVGFLYn-d","16aoxSBG53QXM0Lh7W5Od6fS144hvzCVp","1OIh7Xcad1peXnkeXMlbK8_TW6jxpFuQQ","1EnqCwyma5-Tdh2VHhKUiAONl-q4_LaBc"]},{"id":"TABLE-23","r":60,"c":2,"code":"Стол 23","t":"Стол 23 — Прямоугольный, белый мрамор, черные ножки, раздвижной","d":"МДФ, 100(135)70, раздвижной, бело-серый мрамор/черный","bc":"1000034086369","q":"2 шт","fn":"Стол 23 — Прямоугольный, белый мрамор, черные ножки, раздвижной","fid":"1Bi5ripeGRoj2g2GPOy6SB1dboBW_mhZG","cnt":8,"imgs":["1HXwJfDlY78DvLXHcVPN9UMMTQDGhgPMj","1h4TAGPTjcZuEcXreADqrJGYWyIFe3iRt","1HkOCiXc3kBKXNsxXC3fZ5YIHhlDkt0FP","1-msMfIsrSckYy2rRouizSP-Gi_gKWE6b"]},{"id":"TABLE-24","r":61,"c":2,"code":"Стол 24","t":"Стол 24 — Прямоугольный, белый МДФ, белые ножки, раздвижной","d":"Стол РеспектSimple раздвижной, 125x90x75, белый","bc":"1000032410067","q":"23 шт","fn":"Стол 24 — Прямоугольный, белый МДФ, белые ножки, раздвижной","fid":"16qrtnQRzPiB4fJxO7lprsmGmK9vcqa1_","cnt":3,"imgs":["1GP9M1ol_8AFKydrvs5-xvrmwxwZrmVCU","196KnqAhdLoF9-rr8P4VNqfgbEQUGEPg6","1ippVU2s64Jtj4ioIxouSajpw_jvi7Y14","1GP9M1ol_8AFKydrvs5-xvrmwxwZrmVCU"]},{"id":"TABLE-25","r":62,"c":2,"code":"Стол 25","t":"Стол 25 — Прямоугольный, белый МДФ, белые ножки, раздвижной","d":"Стол МДФ раздвижной 100/135 столешница белый, ножки белая","bc":"1000032592466","q":"1 шт","fn":"Стол 25 — Прямоугольный, белый МДФ, белые ножки, раздвижной","fid":"1tw6Ry4DYoj4_oHmNBjqUPo1RX3QLLnW1","cnt":6,"imgs":["1xXgizTGkAqpK29B0qZLvPbTHdRHAw77Q","1L-Y2AHLgPMeynirwzsXdsa9rB6MfqPb6","1aikkNOVJfzGiFlUaZQIlCjkPzNBMoFhJ","1QlAoHlkwXtTCI_jByvKOoTb6RcEZ83Fp"]},{"id":"TABLE-26","r":63,"c":2,"code":"Стол 26","t":"Стол 26 — Круглый, белый МДФ, черные ножки, нераздвижной","d":"Стол круглый МДФ белый, черные ножки","bc":"1000032627496","q":"1 шт","fn":"Стол 26 — Круглый, белый МДФ, черные ножки, нераздвижной","fid":"1IPrUqichk8cu6BCpj9tWM9hzJSLQBytD","cnt":3,"imgs":["1_1sNWMZPXAkuXeUQwi3Q2VYaE7QDAKjD","1rWYfr1GlbRn2vPrW0oR05iWu9QHWNw9-","1DRJ51rQpqUc0DcsUWyHIgrVEeXSArWdr","1_1sNWMZPXAkuXeUQwi3Q2VYaE7QDAKjD"]},{"id":"TABLE-27","r":64,"c":2,"code":"Стол 27","t":"Стол 27 — Круглый, белый МДФ, белые ножки, нераздвижной","d":"Обеденный стол EAMES DSW, круглый, 90*90*75 см, МДФ, белый","bc":"1000032627496","q":"27 шт","fn":"Стол 27 — Круглый, белый МДФ, белые ножки, нераздвижной","fid":"1CKSOA2Ku7eEfgMLwk1Ib_zCxqRClCkSD","cnt":3,"imgs":["1W-cLimkjLaITzGXfxqhctJuStAN5jAa2","1SqTDdDYL1eJ8BVLWNRXpjvjCs2G6jL0k","1Cs7pryZgPiiGpP2-RijF_BmAQl3gXj-8","1W-cLimkjLaITzGXfxqhctJuStAN5jAa2"]},{"id":"TABLE-28","r":65,"c":2,"code":"Стол 28","t":"Стол 28 — Прямоугольный, белый мрамор, черные ножки, раздвижной","d":"Стол МДФ раздвижной 100*70/135 см, столешница серый/белый мрамор, ножки чёрные","bc":"1000033356579","q":"1 шт","fn":"Стол 28 — Прямоугольный, белый мрамор, черные ножки, раздвижной","fid":"1ZbH5jtcfMQ0Z5ZUdq1EVbj45-8wCmKM2","cnt":6,"imgs":["1OjmEqJCz0I_iH5QQfceYCWrBqk1V2Era","1PEY1ydWK1n3Dpm96chg3nUD6-yZb211k","1G2_fmGNxFAXJafDFZdJSPRwC9zYhMHQZ","1PkeR_M59lXeOWqUIj4O6ZFni_IGpSpaQ"]},{"id":"TABLE-29","r":66,"c":2,"code":"Стол 29","t":"Стол 29 — Прямоугольный, белый МДФ, белые ножки, раздвижной","d":"Раздвижной стол CITY, 125x90x75 см, МДФ, белый","bc":"1000032107684","q":"4 шт","fn":"Стол 29 — Прямоугольный, белый МДФ, белые ножки, раздвижной","fid":"1zs--TlbV1a6lOp5chW8UXZuIUpfC6TOU","cnt":6,"imgs":["19e-4gDrWhq__sQJt7hCVGVoQ8q4dVmw4","1v_2RvEk6xrIUTOO0rWeZy7fnfj1Pfsim","1BVNlWXlpNVLpQWVUkZeAr8Za5yJTCDgT","1Mvi8f-y0itV0wEFBQHz1qgniTnGNeWCO"]},{"id":"TABLE-30","r":67,"c":2,"code":"Стол 30","t":"Стол 30 — Прямоугольный, бежевый, черные ножки, нераздвижной","d":"Стол ЛДСП нераздвижной, 80 см, столешница бежевая, ножки чёрные","bc":"1000033355084","q":"1 шт","fn":"Стол 30 — Прямоугольный, бежевый, черные ножки, нераздвижной","fid":"1GwSLuXom7fC7X7vdjsz5zZGwDgpuL_pr","cnt":3,"imgs":["1-9w_BPbBvh_AAIZeJMMv0huDtk9GmlhI","1B0Vt2Bwj35yvAEVEMnZd6-HHUVsdubUq","1cWTi8v8HcqoBXlvJibDYP0aO7O4ABFnp","1-9w_BPbBvh_AAIZeJMMv0huDtk9GmlhI"]}];
+
+    const INITIAL_PRODUCTS = RAW_COMPACT.map(x => ({
+      id: x.id,
+      sheetRow: x.r,
+      enabled: x.en !== false,
+      category: x.c === 1 ? 'chairs' : 'tables',
+      categoryLabel: x.c === 1 ? 'Стулья и кресла' : 'Столы обеденные',
+      code: x.code,
+      title: x.t,
+      waDesc: x.d,
+      barcode: x.bc,
+      qty: x.q,
+      folderName: x.fn,
+      folderUrl: `https://drive.google.com/drive/folders/${x.fid}`,
+      totalPhotosInDrive: x.cnt,
+      viewUrls: x.imgs.map(id => id.startsWith('http') ? id : `https://drive.google.com/file/d/${id}/view`)
+    }));
+
+    const STORAGE_KEY = 'b2b_noble_euclid_catalog_v3';
+
+    let products = [];
+    let currentCategory = 'all';
+    let currentSearch = '';
+    let viewMode = 'slideshow';
+    let slideIndex = 0;
+    let activeCardThumb = {};
+    let editingProductId = null;
+
+    let autoPlayTimer = null;
+    let isAutoPlaying = false;
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    function toDisplayUrl(rawUrl) {
+      if (!rawUrl || typeof rawUrl !== 'string') return '';
+      const trimmed = rawUrl.trim();
+      if (!trimmed) return '';
+      const matchFileD = trimmed.match(/\/d\/([a-zA-Z0-9_-]{15,})/);
+      if (matchFileD) {
+        return `https://drive.google.com/thumbnail?id=${matchFileD[1]}&sz=w1200`;
+      }
+      const matchIdParam = trimmed.match(/[?&]id=([a-zA-Z0-9_-]{15,})/);
+      if (matchIdParam) {
+        return `https://drive.google.com/thumbnail?id=${matchIdParam[1]}&sz=w1200`;
+      }
+      return trimmed;
+    }
+
+    function initCatalog() {
+      let saved = {};
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) saved = JSON.parse(raw);
+      } catch (e) {}
+
+      products = INITIAL_PRODUCTS.map(p => {
+        const custom = saved[p.id];
+        const origViewUrls = p.viewUrls.slice(0, 4);
+        const activeRawUrls = custom && custom.activeRawUrls && custom.activeRawUrls.length === 4
+          ? custom.activeRawUrls
+          : origViewUrls.slice();
+        const aiRawUrls = custom && custom.aiRawUrls && custom.aiRawUrls.length === 4
+          ? custom.aiRawUrls
+          : ['', '', '', ''];
+        return {
+          ...p,
+          origViewUrls,
+          activeRawUrls,
+          aiRawUrls,
+          enabled: custom && typeof custom.enabled === 'boolean' ? custom.enabled : p.enabled,
+          isModified: Boolean(custom && custom.isModified)
+        };
+      });
+
+      renderCatalog();
+      syncFromGoogleSheetLive(false);
+    }
+
+    window.google = window.google || {};
+    window.google.visualization = window.google.visualization || {};
+    window.google.visualization.Query = window.google.visualization.Query || {};
+
+    function syncFromGoogleSheetLive(showToast) {
+      const statusEl = document.getElementById('liveSyncStatus');
+      if (statusEl) statusEl.textContent = '⏳ Синхронизация...';
+
+      window.google.visualization.Query.setResponse = function(response) {
+        try {
+          if (!response || !response.table || !response.table.rows) return;
+          const rows = response.table.rows;
+
+          rows.forEach(r => {
+            const c = r.c;
+            if (!c) return;
+            const cellVal = idx => (c[idx] && c[idx].v !== null && c[idx].v !== undefined) ? c[idx].v : '';
+            const isChecked = c[0] ? Boolean(c[0].v) : true;
+            const codeId = String(cellVal(1)).trim();
+            if (!codeId) return;
+
+            const prod = products.find(p => p.id === codeId);
+            if (prod) {
+              prod.enabled = isChecked;
+              if (cellVal(3)) prod.title = String(cellVal(3));
+              if (cellVal(4)) prod.waDesc = String(cellVal(4));
+              if (cellVal(5) !== '') prod.barcode = String(cellVal(5));
+              if (cellVal(6)) prod.qty = String(cellVal(6));
+
+              const sheetUrls = [14, 15, 16, 17].map(i => String(cellVal(i)).trim()).filter(Boolean);
+              if (sheetUrls.length === 4 && !prod.isModified) {
+                prod.activeRawUrls = sheetUrls;
+              }
+              const sheetAiUrls = [18, 19, 20, 21].map(i => String(cellVal(i)).trim());
+              if (sheetAiUrls.some(Boolean) && !prod.isModified) {
+                prod.aiRawUrls = sheetAiUrls;
+              }
+            }
+          });
+
+          if (statusEl) {
+            statusEl.textContent = '✅ Таблица синхронизирована';
+            statusEl.className = 'text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 font-semibold shrink-0';
+          }
+          renderCatalog();
+        } catch (err) {
+          if (statusEl) statusEl.textContent = '⚡ Автономный режим';
+        }
+      };
+
+      const oldScript = document.getElementById('gvizJsonpScript');
+      if (oldScript) oldScript.remove();
+      const s = document.createElement('script');
+      s.id = 'gvizJsonpScript';
+      s.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&gid=${B2B_GID}&_ts=${Date.now()}`;
+      s.onerror = () => {
+        if (statusEl) statusEl.textContent = '📴 Офлайн-режим';
+      };
+      document.body.appendChild(s);
+    }
+
+    function saveToLocalStorage() {
+      const map = {};
+      products.forEach(p => {
+        if (p.isModified) {
+          map[p.id] = {
+            activeRawUrls: p.activeRawUrls,
+            aiRawUrls: p.aiRawUrls,
+            enabled: p.enabled,
+            isModified: true
+          };
+        }
+      });
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+      } catch (e) {}
+    }
+
+    function updateCounters() {
+      const enabledProducts = products.filter(p => p.enabled);
+      const chairsCount = enabledProducts.filter(p => p.category === 'chairs').length;
+      const tablesCount = enabledProducts.filter(p => p.category === 'tables').length;
+
+      const cAll = document.getElementById('count-all');
+      const cChairs = document.getElementById('count-chairs');
+      const cTables = document.getElementById('count-tables');
+      const badge = document.getElementById('liveCountBadge');
+
+      if (cAll) cAll.textContent = enabledProducts.length;
+      if (cChairs) cChairs.textContent = chairsCount;
+      if (cTables) cTables.textContent = tablesCount;
+      if (badge) badge.textContent = `В каталоге: ${enabledProducts.length} поз.`;
+    }
+
+    function getFilteredProducts() {
+      return products.filter(p => {
+        if (!p.enabled) return false;
+        if (currentCategory !== 'all' && p.category !== currentCategory) return false;
+        if (currentSearch) {
+          const q = currentSearch.toLowerCase();
+          const hay = `${p.code} ${p.title} ${p.waDesc} ${p.barcode} ${p.folderName} ${p.qty}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function scrollToSlideshowSmooth() {
+      const anchor = document.getElementById('slideshowAnchor');
+      if (anchor) {
+        setTimeout(() => {
+          anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 40);
+      }
+    }
+
+    function setCategory(cat) {
+      currentCategory = cat;
+      slideIndex = 0;
+      ['all', 'chairs', 'tables'].forEach(c => {
+        const btn = document.getElementById(`tab-${c}`);
+        if (c === cat) {
+          btn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition cursor-pointer bg-[var(--primary)] text-[var(--primary-foreground)]';
+        } else {
+          btn.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition cursor-pointer bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]';
+        }
+      });
+      renderCatalog();
+    }
+
+    function handleSearch(val) {
+      currentSearch = val.trim();
+      slideIndex = 0;
+      renderCatalog();
+    }
+
+    function setViewMode(mode, shouldScrollToSlide) {
+      viewMode = mode;
+      const btnSlideshow = document.getElementById('mode-slideshow');
+      const btnScroll = document.getElementById('mode-scroll');
+      const backToTop = document.getElementById('backToTopBtn');
+      const mobileNav = document.getElementById('mobileBottomNav');
+
+      if (mode === 'slideshow') {
+        btnSlideshow.className = 'py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm';
+        btnScroll.className = 'py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 text-[var(--muted-foreground)] hover:text-[var(--foreground)]';
+        document.getElementById('catalogSlideshow').classList.remove('hidden');
+        document.getElementById('catalogScroll').classList.add('hidden');
+        backToTop.classList.add('hidden');
+        if (mobileNav) mobileNav.classList.remove('hidden');
+        renderCatalog();
+        if (shouldScrollToSlide) {
+          scrollToSlideshowSmooth();
+        }
+      } else {
+        stopAutoPlay();
+        btnScroll.className = 'py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm';
+        btnSlideshow.className = 'py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 text-[var(--muted-foreground)] hover:text-[var(--foreground)]';
+        document.getElementById('catalogSlideshow').classList.add('hidden');
+        document.getElementById('catalogScroll').classList.remove('hidden');
+        backToTop.classList.remove('hidden');
+        if (mobileNav) mobileNav.classList.add('hidden');
+        renderCatalog();
+      }
+    }
+
+    function toggleAutoPlay() {
+      if (isAutoPlaying) {
+        stopAutoPlay();
+      } else {
+        startAutoPlay();
+      }
+      renderCatalog();
+    }
+
+    function startAutoPlay() {
+      stopAutoPlay();
+      isAutoPlaying = true;
+      updateMobilePlayBtn();
+      scrollToSlideshowSmooth();
+      autoPlayTimer = setInterval(() => {
+        const list = getFilteredProducts();
+        if (list.length === 0) return;
+        const p = list[slideIndex];
+        const curThumb = activeCardThumb[p.id] || 0;
+        if (curThumb < 1) {
+          activeCardThumb[p.id] = curThumb + 1;
+          renderCatalog();
+        } else {
+          activeCardThumb[p.id] = 0;
+          goToSlide(slideIndex + 1, false);
+        }
+      }, 3200);
+    }
+
+    function stopAutoPlay() {
+      if (autoPlayTimer) {
+        clearInterval(autoPlayTimer);
+        autoPlayTimer = null;
+      }
+      isAutoPlaying = false;
+      updateMobilePlayBtn();
+    }
+
+    function updateMobilePlayBtn() {
+      const btn = document.getElementById('mobilePlayBtn');
+      if (!btn) return;
+      if (isAutoPlaying) {
+        btn.textContent = '⏸ Пауза слайд-шоу';
+        btn.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-amber-500 text-white active:scale-95 cursor-pointer text-center shadow-sm';
+      } else {
+        btn.textContent = '▶ Авто-слайдшоу';
+        btn.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] active:scale-95 cursor-pointer text-center shadow-sm';
+      }
+    }
+
+    function selectThumb(productId, idx) {
+      activeCardThumb[productId] = idx;
+      renderCatalog();
+    }
+
+    function goToSlide(idx, scrollOnSwitch = true) {
+      const list = getFilteredProducts();
+      if (list.length === 0) return;
+      if (idx < 0) slideIndex = list.length - 1;
+      else if (idx >= list.length) slideIndex = 0;
+      else slideIndex = idx;
+      renderCatalog();
+      if (scrollOnSwitch) {
+        scrollToSlideshowSmooth();
+      }
+    }
+
+    function handleTouchStart(ev) {
+      if (!ev.changedTouches || !ev.changedTouches[0]) return;
+      touchStartX = ev.changedTouches[0].screenX;
+    }
+
+    function handleTouchEnd(ev) {
+      if (!ev.changedTouches || !ev.changedTouches[0]) return;
+      touchEndX = ev.changedTouches[0].screenX;
+      const diff = touchStartX - touchEndX;
+      if (Math.abs(diff) > 45) {
+        if (diff > 0) {
+          goToSlide(slideIndex + 1, false);
+        } else {
+          goToSlide(slideIndex - 1, false);
+        }
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (viewMode !== 'slideshow') return;
+      if (document.getElementById('editModal') && !document.getElementById('editModal').classList.contains('hidden')) return;
+      if (document.getElementById('syncModal') && !document.getElementById('syncModal').classList.contains('hidden')) return;
+      if (document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        e.preventDefault();
+        goToSlide(slideIndex + 1, false);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        goToSlide(slideIndex - 1, false);
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        toggleAutoPlay();
+      }
+    });
+
+    function renderCatalog() {
+      updateCounters();
+      const list = getFilteredProducts();
+      if (viewMode === 'slideshow') {
+        renderSlideshow(list);
+      } else {
+        renderScrollList(list);
+      }
+    }
+
+    function renderSlideshow(list) {
+      const container = document.getElementById('catalogSlideshow');
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="py-14 px-4 text-center rounded-2xl bg-[var(--card)] border border-[var(--border)]">
+            <div class="text-sm font-bold">Ничего не найдено (или товары скрыты галочкой в Таблице)</div>
+            <p class="text-xs text-[var(--muted-foreground)] mt-1">Очистите поиск или проверьте столбец A во вкладке B2B_Буклет_Витрина</p>
+          </div>`;
+        return;
+      }
+
+      if (slideIndex >= list.length) slideIndex = 0;
+      if (slideIndex < 0) slideIndex = list.length - 1;
+
+      const p = list[slideIndex];
+      const selIdx = activeCardThumb[p.id] || 0;
+      const displayUrls = p.activeRawUrls.map(u => toDisplayUrl(u));
+      const mainUrl = displayUrls[selIdx] || displayUrls[0];
+      const nextAngleIdx = (selIdx + 1) % 4;
+      const progressPct = Math.round(((slideIndex + 1) / list.length) * 100);
+
+      const optionsHtml = list.map((item, idx) =>
+        `<option value="${idx}" ${idx === slideIndex ? 'selected' : ''}>${idx + 1}/${list.length} • ${item.code} — ${item.title.slice(0, 42)}</option>`
+      ).join('');
+
+      const thumbsHtml = [0, 1, 2, 3].map(i => {
+        const isSel = i === selIdx;
+        return `
+          <button onclick="selectThumb('${p.id}', ${i})"
+                  class="relative rounded-xl overflow-hidden bg-[var(--secondary)] aspect-square sm:aspect-[4/3] border border-[var(--border)] cursor-pointer transition ${isSel ? 'thumb-selected' : 'opacity-70 hover:opacity-100'}">
+            <img src="${displayUrls[i]}" alt="Ракурс ${i + 1}" class="w-full h-full object-cover" />
+            <span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-xs font-mono font-bold bg-black/75 text-white">
+              #${i + 1}
+            </span>
+          </button>`;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="slide-anim flex-1 flex flex-col gap-3">
+
+          <!-- КОМПАКТНЫЙ БАР НАВИГАЦИИ И АВТО-ПРОКРУТКИ СЛАЙД-ШОУ -->
+          <div class="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-2.5 sm:px-4 sm:py-3 flex flex-col gap-2 soft-card">
+            <div class="flex items-center justify-between gap-2">
+              <button onclick="goToSlide(${slideIndex - 1}, false)"
+                      class="px-3 sm:px-4 py-2 rounded-xl text-xs font-bold bg-[var(--secondary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] border border-[var(--border)] active:scale-95 transition cursor-pointer shrink-0">
+                ◀ <span class="hidden sm:inline">Предыдущий</span>
+              </button>
+
+              <select onchange="goToSlide(parseInt(this.value, 10), false)"
+                      class="flex-1 min-w-0 px-2.5 py-2 rounded-xl text-xs font-bold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] focus:outline-none focus:border-[var(--primary)] cursor-pointer">
+                ${optionsHtml}
+              </select>
+
+              <button onclick="toggleAutoPlay()"
+                      class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+                        isAutoPlaying
+                          ? 'bg-amber-500 text-white shadow-sm'
+                          : 'bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)]'
+                      }">
+                ${isAutoPlaying ? '⏸ Пауза' : '▶ Авто-показ'}
+              </button>
+
+              <button onclick="goToSlide(${slideIndex + 1}, false)"
+                      class="px-3 sm:px-4 py-2 rounded-xl text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 active:scale-95 transition cursor-pointer shrink-0 shadow-sm">
+                <span class="hidden sm:inline">Следующий</span> ▶
+              </button>
+            </div>
+
+            <div class="w-full h-1.5 rounded-full bg-[var(--secondary)] overflow-hidden">
+              <div class="h-full bg-[var(--primary)] transition-all duration-300" style="width: ${progressPct}%"></div>
+            </div>
+          </div>
+
+          <!-- КАРТОЧКА-СЛАЙД -->
+          <div class="rounded-3xl bg-[var(--card)] border border-[var(--border)] soft-card overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+
+            <!-- ФОТО-БЛОК -->
+            <div class="lg:col-span-7 p-3 sm:p-5 bg-[var(--secondary)]/25 border-b lg:border-b-0 lg:border-r border-[var(--border)] flex flex-col justify-between gap-3"
+                 ontouchstart="handleTouchStart(event)"
+                 ontouchend="handleTouchEnd(event)">
+
+              <div class="relative rounded-2xl overflow-hidden bg-black/5 border border-[var(--border)] aspect-[4/3] sm:aspect-[16/11] flex items-center justify-center select-none">
+                <img src="${mainUrl}" alt="${p.title}"
+                     onclick="goToSlide(${slideIndex + 1}, false)"
+                     title="Нажмите на фото или смахните влево/вправо для перехода к следующему слайду"
+                     class="w-full h-full object-contain cursor-pointer" />
+
+                <button onclick="event.stopPropagation(); goToSlide(${slideIndex - 1}, false)"
+                        aria-label="Предыдущий слайд"
+                        class="absolute left-2.5 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/60 text-white flex items-center justify-center text-sm font-bold active:scale-90 hover:bg-black/80 transition cursor-pointer shadow-md">
+                  ◀
+                </button>
+
+                <button onclick="event.stopPropagation(); goToSlide(${slideIndex + 1}, false)"
+                        aria-label="Следующий слайд"
+                        class="absolute right-2.5 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/60 text-white flex items-center justify-center text-sm font-bold active:scale-90 hover:bg-black/80 transition cursor-pointer shadow-md">
+                  ▶
+                </button>
+
+                <div class="absolute top-2.5 left-2.5 flex flex-wrap items-center gap-1.5 pointer-events-none">
+                  <span class="px-2.5 py-1 rounded-xl text-xs font-mono font-bold bg-black/75 text-white backdrop-blur-sm">
+                    ${slideIndex + 1} / ${list.length} • ${p.code}
+                  </span>
+                  ${p.isModified ? `<span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-600 text-white">✨ ИИ-фото</span>` : ''}
+                </div>
+
+                <button onclick="event.stopPropagation(); selectThumb('${p.id}', ${nextAngleIdx})"
+                        class="absolute bottom-2.5 right-2.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-black/75 text-white backdrop-blur-sm active:scale-95 cursor-pointer">
+                  🔄 Ракурс ${selIdx + 1}/4
+                </button>
+              </div>
+
+              <!-- 4 МИНИАТЮРЫ РАКУРСОВ -->
+              <div class="grid grid-cols-4 gap-2 sm:gap-3">
+                ${thumbsHtml}
+              </div>
+            </div>
+
+            <!-- ИНФОРМАЦИОННЫЙ БЛОК ТОВАРА -->
+            <div class="lg:col-span-5 p-4 sm:p-6 flex flex-col justify-between gap-4">
+              <div class="space-y-3.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[var(--secondary)] text-[var(--muted-foreground)] border border-[var(--border)]">
+                    ${p.categoryLabel}
+                  </span>
+                  <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
+                    📦 В наличии: ${p.qty}
+                  </span>
+                </div>
+
+                <div>
+                  <h2 class="text-base sm:text-xl font-extrabold leading-snug">
+                    ${p.title}
+                  </h2>
+                  <p class="text-xs text-[var(--muted-foreground)] mt-1">
+                    ${p.waDesc || '—'}
+                  </p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                  <div class="p-2.5 rounded-xl bg-[var(--secondary)]/60 border border-[var(--border)]">
+                    <div class="text-[var(--muted-foreground)]">Штрихкод / Код</div>
+                    <div class="font-mono font-bold mt-0.5 truncate">${p.barcode || '—'}</div>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-[var(--secondary)]/60 border border-[var(--border)]">
+                    <div class="text-[var(--muted-foreground)]">Ячейки в Таблице</div>
+                    <div class="font-mono font-bold mt-0.5">Строка #${p.sheetRow} (O..V)</div>
+                  </div>
+                </div>
+
+                <a href="${p.folderUrl}" target="_blank"
+                   class="flex items-center justify-between p-2.5 rounded-xl bg-[var(--secondary)]/40 border border-[var(--border)] text-xs hover:border-[var(--primary)] transition">
+                  <span class="font-medium truncate pr-2">📁 Папка исходников: ${p.folderName}</span>
+                  <span class="text-[var(--primary)] font-bold shrink-0">${p.totalPhotosInDrive} фото ↗</span>
+                </a>
+              </div>
+
+              <div class="space-y-2.5 pt-3 border-t border-[var(--border)]">
+                <button onclick="openEditModal('${p.id}')"
+                        class="w-full py-3 px-4 rounded-2xl text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-95 active:scale-98 transition cursor-pointer shadow-sm flex items-center justify-center gap-2">
+                  <span>✏️ Заменить 4+4 фото (Вставить собранный стул)</span>
+                </button>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <a href="https://docs.google.com/spreadsheets/d/1Ee68RvsPAqKntENL0o6Xqu5lTpTHLNuj26erJRzPVcU/edit#gid=1432632828&range=A${p.sheetRow}:V${p.sheetRow}"
+                     target="_blank"
+                     class="py-2.5 px-3 rounded-xl text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] text-center hover:opacity-90 transition">
+                    📊 Строка #${p.sheetRow} (Галочка A${p.sheetRow})
+                  </a>
+                  <button onclick="downloadDirectPdfFile()"
+                          class="py-2.5 px-3 rounded-xl text-xs font-bold bg-rose-600 text-white hover:opacity-90 transition cursor-pointer shadow-sm">
+                    📥 Скачать PDF
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `;
+    }
+
+    function renderScrollList(list) {
+      const container = document.getElementById('catalogScroll');
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="py-14 text-center rounded-2xl bg-[var(--card)] border border-[var(--border)]">
+            <div class="text-sm font-bold">По вашему запросу ничего не найдено</div>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+          ${list.map((p, idx) => {
+            const selIdx = activeCardThumb[p.id] || 0;
+            const displayUrls = p.activeRawUrls.map(u => toDisplayUrl(u));
+            const mainUrl = displayUrls[selIdx] || displayUrls[0];
+
+            const thumbsHtml = [0, 1, 2, 3].map(i => {
+              const isSel = i === selIdx;
+              return `
+                <button onclick="selectThumb('${p.id}', ${i})"
+                        class="relative rounded-lg overflow-hidden bg-[var(--secondary)] aspect-square border border-[var(--border)] cursor-pointer transition ${isSel ? 'thumb-selected' : 'opacity-75 hover:opacity-100'}">
+                  <img src="${displayUrls[i]}" alt="Ракурс ${i + 1}" loading="lazy" class="w-full h-full object-cover" />
+                </button>`;
+            }).join('');
+
+            return `
+              <article class="rounded-3xl bg-[var(--card)] border border-[var(--border)] soft-card overflow-hidden flex flex-col">
+                <div class="p-3 sm:p-4 bg-[var(--secondary)]/30 border-b border-[var(--border)]">
+                  <div class="relative rounded-2xl overflow-hidden bg-black/5 aspect-[4/3] border border-[var(--border)]">
+                    <img src="${mainUrl}" alt="${p.title}" loading="lazy"
+                         onclick="slideIndex = ${idx}; setViewMode('slideshow', true);"
+                         title="Открыть в режиме Слайд-шоу"
+                         class="w-full h-full object-contain cursor-pointer" />
+                    <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                      <span class="px-2.5 py-0.5 rounded-lg text-xs font-mono font-bold bg-black/75 text-white">
+                        ${p.code}
+                      </span>
+                      ${p.isModified ? `<span class="px-2 py-0.5 rounded-lg text-xs font-bold bg-emerald-600 text-white">✨ ИИ</span>` : ''}
+                    </div>
+                    <span class="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-emerald-600/90 text-white">
+                      ${p.qty}
+                    </span>
+                  </div>
+                  <div class="grid grid-cols-4 gap-2 mt-2.5">
+                    ${thumbsHtml}
+                  </div>
+                </div>
+
+                <div class="p-4 flex-1 flex flex-col justify-between gap-3">
+                  <div>
+                    <div class="text-xs text-[var(--muted-foreground)] font-medium">
+                      ${p.categoryLabel} • ШК: <span class="font-mono font-bold text-[var(--foreground)]">${p.barcode || '—'}</span>
+                    </div>
+                    <h2 class="text-sm sm:text-base font-bold mt-1 leading-snug">${p.title}</h2>
+                    <p class="text-xs text-[var(--muted-foreground)] mt-1">${p.waDesc || '—'}</p>
+                  </div>
+
+                  <div class="pt-2.5 border-t border-[var(--border)] flex items-center gap-2">
+                    <button onclick="openEditModal('${p.id}')"
+                            class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] active:scale-95 transition cursor-pointer">
+                      ✏️ Заменить 4 фото
+                    </button>
+                    <button onclick="slideIndex = ${idx}; setViewMode('slideshow', true);"
+                            class="py-2.5 px-3 rounded-xl text-xs font-bold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] active:scale-95 transition cursor-pointer">
+                      🎬 Слайд-шоу
+                    </button>
+                  </div>
+                </div>
+              </article>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    const PUBLIC_WEB_URL = 'https://rasulkaraganda2024.github.io/b2b-furniture-catalog/';
+    let isPdfCancelled = false;
+
+    function copyWebCatalogUrl() {
+      const urlToShare = window.location.protocol.startsWith('http') ? window.location.href : PUBLIC_WEB_URL;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(urlToShare);
+      }
+      const lbl = document.getElementById('btnShareWebLabel');
+      if (lbl) {
+        const orig = lbl.textContent;
+        lbl.textContent = 'Ссылка скопирована!';
+        setTimeout(() => { lbl.textContent = orig; }, 2500);
+      }
+    }
+
+    function cancelDirectPdf() {
+      isPdfCancelled = true;
+      const modal = document.getElementById('pdfProgressModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function loadCorsImage(url, timeoutMs = 8000) {
+      return new Promise((resolve) => {
+        if (!url) return resolve(null);
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        let done = false;
+        const timer = setTimeout(() => {
+          if (!done) { done = true; resolve(null); }
+        }, timeoutMs);
+        img.onload = () => {
+          if (!done) { done = true; clearTimeout(timer); resolve(img); }
+        };
+        img.onerror = () => {
+          if (!done) { done = true; clearTimeout(timer); resolve(null); }
+        };
+        img.src = url;
+      });
+    }
+
+    function wrapCanvasText(ctx, text, maxWidth) {
+      const words = String(text || '').split(/\s+/);
+      const lines = [];
+      let currentLine = '';
+      for (let i = 0; i < words.length; i++) {
+        const testLine = currentLine ? currentLine + ' ' + words[i] : words[i];
+        if (ctx.measureText(testLine).width > maxWidth && currentLine) {
+          lines.push(currentLine);
+          currentLine = words[i];
+        } else {
+          currentLine = testLine;
+        }
+      }
+      if (currentLine) lines.push(currentLine);
+      return lines;
+    }
+
+    async function downloadDirectPdfFile() {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        downloadPdfBooklet();
+        return;
+      }
+      const list = getFilteredProducts();
+      if (list.length === 0) return;
+
+      isPdfCancelled = false;
+      const modal = document.getElementById('pdfProgressModal');
+      const bar = document.getElementById('pdfProgressBar');
+      const stepEl = document.getElementById('pdfProgressStep');
+      if (modal) modal.classList.remove('hidden');
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 1600;
+      canvas.height = 1131;
+      const ctx = canvas.getContext('2d');
+
+      for (let idx = 0; idx < list.length; idx++) {
+        if (isPdfCancelled) return;
+        const p = list[idx];
+        const pct = Math.max(5, Math.round(((idx + 1) / list.length) * 100));
+        if (bar) bar.style.width = `${pct}%`;
+        if (stepEl) stepEl.textContent = `Верстка страницы ${idx + 1} из ${list.length}: ${p.code}`;
+
+        // Load all 4 photos in parallel (using smaller w600 thumbnails for fast PDF build)
+        const urls = p.activeRawUrls.slice(0, 4).map(u => {
+          const disp = toDisplayUrl(u);
+          return disp.replace('sz=w1200', 'sz=w600');
+        });
+        const imgs = await Promise.all(urls.map(u => loadCorsImage(u)));
+        if (isPdfCancelled) return;
+
+        // Draw slide on canvas (1600 x 1131)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Outer border card
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(28, 28, canvas.width - 56, canvas.height - 56);
+
+        // Header bar
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(30, 30, canvas.width - 60, 125);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(30, 155, canvas.width - 60, 2);
+
+        // Category & Code badge
+        ctx.fillStyle = '#2563eb';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText(`${p.categoryLabel.toUpperCase()}  •  КОД: ${p.code}`, 56, 72);
+
+        // Product Title
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 30px sans-serif';
+        const titleLines = wrapCanvasText(ctx, p.title, 1120);
+        ctx.fillText(titleLines[0] || '', 56, 118);
+        if (titleLines[1]) {
+          ctx.font = 'bold 24px sans-serif';
+          ctx.fillText(titleLines[1], 56, 146);
+        }
+
+        // Right side: Slide index & Quantity badge
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#64748b';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText(`Слайд ${idx + 1} из ${list.length}`, canvas.width - 56, 72);
+
+        ctx.fillStyle = '#059669';
+        ctx.font = 'bold 28px sans-serif';
+        ctx.fillText(`В наличии: ${p.qty}`, canvas.width - 56, 118);
+        ctx.textAlign = 'left';
+
+        // 4 Image Panels (Grid 4 columns)
+        const gridTop = 185;
+        const gridHeight = 790;
+        const gap = 20;
+        const colWidth = Math.floor((canvas.width - 112 - gap * 3) / 4);
+
+        for (let i = 0; i < 4; i++) {
+          const x = 56 + i * (colWidth + gap);
+          const y = gridTop;
+
+          ctx.fillStyle = '#f8fafc';
+          ctx.fillRect(x, y, colWidth, gridHeight);
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x, y, colWidth, gridHeight);
+
+          ctx.fillStyle = '#334155';
+          ctx.font = 'bold 20px sans-serif';
+          ctx.fillText(`Ракурс #${i + 1}`, x + 16, y + 34);
+
+          const im = imgs[i];
+          if (im && im.width && im.height) {
+            const boxX = x + 10;
+            const boxY = y + 50;
+            const boxW = colWidth - 20;
+            const boxH = gridHeight - 64;
+            const scale = Math.min(boxW / im.width, boxH / im.height);
+            const drawW = im.width * scale;
+            const drawH = im.height * scale;
+            const drawX = boxX + (boxW - drawW) / 2;
+            const drawY = boxY + (boxH - drawH) / 2;
+            ctx.drawImage(im, drawX, drawY, drawW, drawH);
+          } else {
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '18px sans-serif';
+            ctx.fillText('Фото загружается...', x + 24, y + gridHeight / 2);
+          }
+        }
+
+        // Footer bar
+        const footerY = 1005;
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(30, footerY, canvas.width - 60, 2);
+
+        ctx.fillStyle = '#334155';
+        ctx.font = 'bold 21px sans-serif';
+        ctx.fillText(`Характеристики: ${p.waDesc || '—'}`, 56, footerY + 42);
+
+        ctx.fillStyle = '#475569';
+        ctx.font = '20px sans-serif';
+        ctx.fillText(`Штрих-код (ШК): ${p.barcode || '—'}   |   Папка Google Диска: ${p.folderName}`, 56, footerY + 76);
+
+        const pageDataUrl = canvas.toDataURL('image/jpeg', 0.84);
+        if (idx > 0) pdf.addPage('a4', 'landscape');
+        pdf.addImage(pageDataUrl, 'JPEG', 0, 0, 297, 210, undefined, 'FAST');
+      }
+
+      if (modal) modal.classList.add('hidden');
+      const catSuffix = currentCategory === 'all' ? 'Все_позиции' : (currentCategory === 'chairs' ? 'Стулья' : 'Столы');
+      pdf.save(`B2B_Каталог_${catSuffix}.pdf`);
+    }
+
+    function downloadPdfBooklet() {
+      const list = getFilteredProducts();
+      const printContainer = document.getElementById('printBookletContainer');
+      if (!printContainer) return;
+
+      printContainer.innerHTML = list.map((p, idx) => {
+        const displayUrls = p.activeRawUrls.map(u => toDisplayUrl(u));
+        return `
+          <div class="pdf-page">
+            <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #e2e8f0;padding-bottom:8px;">
+              <div>
+                <span style="font-size:12px;font-weight:800;color:#2563eb;text-transform:uppercase;">${p.categoryLabel} • Код: ${p.code}</span>
+                <h2 style="font-size:18px;font-weight:800;margin:2px 0 0 0;color:#0f172a;">${p.title}</h2>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:12px;color:#64748b;">Слайд ${idx + 1} из ${list.length}</div>
+                <div style="font-size:14px;font-weight:800;color:#059669;">В наличии: ${p.qty}</div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin:12px 0;flex:1;align-items:center;">
+              ${[0, 1, 2, 3].map(i => `
+                <div style="border:1px solid #cbd5e1;border-radius:10px;padding:6px;height:110mm;display:flex;flex-direction:column;justify-content:space-between;background:#f8fafc;">
+                  <div style="font-size:11px;font-weight:700;color:#475569;">Ракурс #${i + 1}</div>
+                  <img src="${displayUrls[i]}" style="width:100%;height:92mm;object-fit:contain;" />
+                </div>
+              `).join('')}
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #e2e8f0;padding-top:8px;font-size:12px;color:#334155;">
+              <div><strong>Характеристики:</strong> ${p.waDesc || '—'}</div>
+              <div><strong>Штрихкод (ШК):</strong> ${p.barcode || '—'} | <strong>Папка:</strong> ${p.folderName}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      setTimeout(() => {
+        window.print();
+      }, 250);
+    }
+
+    function openEditModal(productId) {
+      editingProductId = productId;
+      const p = products.find(x => x.id === productId);
+      if (!p) return;
+
+      document.getElementById('modalProductCode').textContent = `${p.code} • Остаток: ${p.qty}`;
+      document.getElementById('modalProductTitle').textContent = p.title;
+      document.getElementById('modalSheetInfo').textContent =
+        `Строка #${p.sheetRow} в Таблице • Активные: O${p.sheetRow}:R${p.sheetRow} • ИИ-слоты: S${p.sheetRow}:V${p.sheetRow}`;
+
+      renderModalSlots(p);
+      document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    function renderModalSlots(p) {
+      const colLettersActive = ['O', 'P', 'Q', 'R'];
+      const colLettersAi = ['S', 'T', 'U', 'V'];
+
+      document.getElementById('modalActiveSlots').innerHTML = [0, 1, 2, 3].map(i => {
+        const raw = p.activeRawUrls[i] || '';
+        const disp = toDisplayUrl(raw);
+        return `
+          <div class="p-2.5 rounded-2xl bg-[var(--secondary)]/60 border border-[var(--border)] flex gap-2.5 items-center">
+            <div class="w-16 h-16 rounded-xl overflow-hidden bg-black/10 border border-[var(--border)] shrink-0">
+              <img id="preview-active-${i}" src="${disp}" alt="Ракурс ${i + 1}" class="w-full h-full object-cover" />
+            </div>
+            <div class="flex-1 min-w-0 space-y-1">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold">Ракурс #${i + 1} (${colLettersActive[i]}${p.sheetRow})</label>
+                <a href="${raw}" target="_blank" class="text-xs text-[var(--primary)] hover:underline">Открыть ↗</a>
+              </div>
+              <input id="input-active-${i}" type="text" value="${raw.replace(/"/g, '&quot;')}"
+                     oninput="updateSlotPreview('active', ${i}, this.value)"
+                     placeholder="Ссылка Google Диск или URL фото..."
+                     class="w-full px-2.5 py-1.5 rounded-xl text-xs font-mono bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] focus:outline-none focus:border-[var(--primary)]" />
+            </div>
+          </div>`;
+      }).join('');
+
+      document.getElementById('modalAiSlots').innerHTML = [0, 1, 2, 3].map(i => {
+        const raw = p.aiRawUrls[i] || '';
+        const disp = toDisplayUrl(raw);
+        return `
+          <div class="p-2.5 rounded-2xl bg-[var(--secondary)]/40 border border-[var(--border)] flex gap-2.5 items-center">
+            <div class="w-16 h-16 rounded-xl overflow-hidden bg-black/10 border border-[var(--border)] shrink-0 flex items-center justify-center">
+              ${disp
+                ? `<img id="preview-ai-${i}" src="${disp}" alt="AI ${i + 1}" class="w-full h-full object-cover" />`
+                : `<span id="preview-ai-empty-${i}" class="text-xs text-[var(--muted-foreground)] text-center px-1">ИИ #${i + 1}</span>`
+              }
+            </div>
+            <div class="flex-1 min-w-0 space-y-1">
+              <div class="flex items-center justify-between gap-1">
+                <label class="text-xs font-bold">Слот ИИ #${i + 1} (${colLettersAi[i]}${p.sheetRow})</label>
+                <button onclick="promoteAiSlotToActive(${i})"
+                        class="px-2 py-0.5 rounded-lg text-xs font-bold bg-[var(--card)] border border-[var(--border)] hover:border-[var(--primary)] cursor-pointer">
+                  ⬆️ В Ракурс #${i + 1}
+                </button>
+              </div>
+              <input id="input-ai-${i}" type="text" value="${raw.replace(/"/g, '&quot;')}"
+                     oninput="updateSlotPreview('ai', ${i}, this.value)"
+                     placeholder="Ссылка на собранный стул ИИ..."
+                     class="w-full px-2.5 py-1.5 rounded-xl text-xs font-mono bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] focus:outline-none focus:border-[var(--primary)]" />
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function updateSlotPreview(type, idx, val) {
+      const disp = toDisplayUrl(val);
+      const img = document.getElementById(`preview-${type}-${idx}`);
+      if (img && disp) {
+        img.src = disp;
+      }
+    }
+
+    function promoteAiSlotToActive(idx) {
+      const aiInput = document.getElementById(`input-ai-${idx}`);
+      const activeInput = document.getElementById(`input-active-${idx}`);
+      if (aiInput && activeInput && aiInput.value.trim()) {
+        activeInput.value = aiInput.value.trim();
+        updateSlotPreview('active', idx, activeInput.value);
+      }
+    }
+
+    function saveEditModal() {
+      const p = products.find(x => x.id === editingProductId);
+      if (!p) return;
+
+      for (let i = 0; i < 4; i++) {
+        const actVal = document.getElementById(`input-active-${i}`).value.trim();
+        const aiVal = document.getElementById(`input-ai-${i}`).value.trim();
+        if (actVal) p.activeRawUrls[i] = actVal;
+        p.aiRawUrls[i] = aiVal;
+      }
+      p.isModified = true;
+      saveToLocalStorage();
+      renderCatalog();
+      closeEditModal();
+    }
+
+    function resetProductImages() {
+      const p = products.find(x => x.id === editingProductId);
+      if (!p) return;
+      p.activeRawUrls = p.origViewUrls.slice();
+      p.aiRawUrls = ['', '', '', ''];
+      p.isModified = false;
+      saveToLocalStorage();
+      renderModalSlots(p);
+      renderCatalog();
+    }
+
+    function copyRowForSheet(type) {
+      const vals = [0, 1, 2, 3].map(i => document.getElementById(`input-${type}-${i}`).value.trim());
+      const tsv = vals.join('\t');
+      navigator.clipboard.writeText(tsv);
+      const toast = document.getElementById('modalCopyToast');
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 2500);
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.add('hidden');
+      editingProductId = null;
+    }
+
+    function openSyncModal() {
+      document.getElementById('exportStatusMsg').textContent = '';
+      document.getElementById('syncModal').classList.remove('hidden');
+    }
+
+    function closeSyncModal() {
+      document.getElementById('syncModal').classList.add('hidden');
+    }
+
+    function exportAllToSheetTSV() {
+      const lines = products.map(p => {
+        const cols = [...p.activeRawUrls, ...p.aiRawUrls];
+        return cols.join('\t');
+      });
+      navigator.clipboard.writeText(lines.join('\n'));
+      document.getElementById('exportStatusMsg').textContent =
+        '✅ Скопировано 66 строк (O2:V67)! Вставьте в ячейку O2 на вкладке B2B_Буклет_Витрина.';
+    }
+
+    function resetAllCustomizations() {
+      localStorage.removeItem(STORAGE_KEY);
+      initCatalog();
+      document.getElementById('exportStatusMsg').textContent = 'Все локальные замены сброшены. Загружены данные из Google Таблицы.';
+    }
+
+    function downloadStandaloneHtml() {
+      const updatedCompact = products.map(p => ({
+        id: p.id,
+        r: p.sheetRow,
+        en: p.enabled,
+        c: p.category === 'chairs' ? 1 : 2,
+        code: p.code,
+        t: p.title,
+        d: p.waDesc,
+        bc: p.barcode,
+        q: p.qty,
+        fn: p.folderName,
+        fid: p.folderUrl.split('/folders/').pop(),
+        cnt: p.totalPhotosInDrive,
+        imgs: p.activeRawUrls
+      }));
+
+      let docHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      const newJson = JSON.stringify(updatedCompact);
+      docHtml = docHtml.replace(/const RAW_COMPACT = \[[\s\S]*?\];/, `const RAW_COMPACT = ${newJson};`);
+
+      const standaloneVars = `:root{--background:#f8fafc;--foreground:#0f172a;--card:#ffffff;--secondary:#f1f5f9;--muted-foreground:#64748b;--primary:#2563eb;--primary-foreground:#ffffff;--border:#e2e8f0;}@media(prefers-color-scheme:dark){:root{--background:#0f172a;--foreground:#f8fafc;--card:#1e293b;--secondary:#334155;--muted-foreground:#94a3b8;--primary:#3b82f6;--primary-foreground:#ffffff;--border:#334155;}}`;
+      docHtml = docHtml.replace('<style>', '<style>' + standaloneVars);
+
+      const blob = new Blob([docHtml], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'B2B_Каталог_Стулья_и_Столы.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    initCatalog();
+  </script>
+</body>
+</html>
